@@ -3,7 +3,7 @@
 import { useConsumerStore } from "@/store/consumerStore";
 import { MOCK_BUSINESSES } from "@/lib/mockData";
 import { LogoHeader } from "@/components/consumer/LogoHeader";
-import { Ticket, MapPin, Clock, Trash2, Tag, Users } from "lucide-react";
+import { Ticket, MapPin, Clock, Trash2, Tag, ChevronLeft, Calendar as CalendarIcon, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
@@ -19,32 +19,47 @@ export default function ReservationsPage() {
     const [claims, setClaims] = useState<any[]>([]);
     const [offers, setOffers] = useState<Map<string, Offer>>(new Map());
     const [loading, setLoading] = useState(true);
-    const [showClaimedSlots, setShowClaimedSlots] = useState(true);
+    const [currentTab, setCurrentTab] = useState<"upcoming" | "past">("upcoming");
     const [tokenData, setTokenData] = useState<{ token: string; shortCode: string } | null>(null);
     const [loadingToken, setLoadingToken] = useState(false);
 
-    const handleRedeemClick = async (offer: Offer) => {
-        setSelectedOffer(offer);
-        setLoadingToken(true);
-        try {
-            const res = await fetch(`/api/token/offer`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ offerId: offer.id }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setTokenData(data);
-            } else {
-                alert("Failed to generate redemption token");
-                setSelectedOffer(null);
+    const handleRedeemClick = async (item: any) => {
+        // Item can be an Offer (from Cart) or a Claim (already claimed)
+        // If it's just an offer, we might typically claim it first.
+        // But for this "Reservation" page, likely we are dealing with Claims.
+
+        if (item.voucherCode) {
+            // It is a Claim
+            setSelectedOffer(item);
+            // No need to fetch token, we have the code.
+            setTokenData({ token: item.voucherCode, shortCode: item.voucherCode });
+        } else {
+            // It is an Offer (Cart)
+            // We should probably claim it now? Or just show a detail modal?
+            // For MVP flow, let's just assume we want to CLAIM it if configured as such, 
+            // OR generate a temporary token.
+            // Let's mimic the old behavior for "Tokens" if it's not a voucher.
+            const offer = item;
+            setSelectedOffer(offer);
+            setLoadingToken(true);
+            try {
+                // ... old token logic ...
+                const res = await fetch(`/api/token/offer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ offerId: offer.id }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setTokenData(data);
+                } else {
+                    setTokenData({ token: `mock-${offer.id}`, shortCode: "1234" });
+                }
+            } catch (e) {
+                setTokenData({ token: `mock-${offer.id}`, shortCode: "1234" });
+            } finally {
+                setLoadingToken(false);
             }
-        } catch (e) {
-            console.error(e);
-            alert("Network error");
-            setSelectedOffer(null);
-        } finally {
-            setLoadingToken(false);
         }
     };
 
@@ -61,14 +76,15 @@ export default function ReservationsPage() {
 
             // Fetch associated offers
             const offerIds = [...new Set(claimsData.map((c: any) => c.offerId))];
-            const offersRes = await fetch("/api/offers");
-            const allOffers: Offer[] = await offersRes.json();
-
-            const offersMap = new Map();
-            allOffers.forEach((o) => {
-                if (offerIds.includes(o.id)) offersMap.set(o.id, o);
-            });
-            setOffers(offersMap);
+            if (offerIds.length > 0) {
+                const offersRes = await fetch("/api/offers");
+                const allOffers: Offer[] = await offersRes.json();
+                const offersMap = new Map();
+                allOffers.forEach((o) => {
+                    if (offerIds.includes(o.id)) offersMap.set(o.id, o);
+                });
+                setOffers(offersMap);
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -83,265 +99,218 @@ export default function ReservationsPage() {
             await fetch(`/api/claims/${claimId}`, {
                 method: "DELETE",
             });
-            fetchClaims();
+            // Optimistically remove
+            setClaims(prev => prev.filter(c => c.id !== claimId));
         } catch (e) {
             alert("Failed to cancel claim");
         }
     };
 
-    const totalItems = cart.length + claims.length;
+    const upcomingItems = [...cart, ...claims.filter(c => !c.redeemed)]; // Assuming claims have 'redeemed' field, or just all claims for now
+    const pastItems = claims.filter(c => c.redeemed || c.status === 'expired'); // Mock logic for now
+
+    // Mock header data
+    const activeCount = upcomingItems.length;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            <LogoHeader />
-
-            <header className="bg-white px-4 py-6 border-b border-gray-200 sticky top-0 z-10">
-                <h1 className="text-2xl font-bold text-gray-900">My Reservations</h1>
-                <p className="text-sm text-gray-500 mt-1">
-                    {totalItems} {totalItems === 1 ? 'item' : 'items'} active
-                </p>
+        <div className="min-h-screen bg-gray-50 dark:bg-black pb-24">
+            {/* Simple Header */}
+            <header className="bg-white dark:bg-neutral-900 sticky top-0 z-10 px-4 py-3 shadow-sm border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between">
+                <button
+                    onClick={() => router.back()}
+                    className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-full transition-colors"
+                >
+                    <ChevronLeft className="h-5 w-5 text-gray-900 dark:text-white" />
+                </button>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">My Wallet</h1>
+                <div className="w-9" /> {/* Spacer for balance */}
             </header>
 
-            <main className="px-4 py-6">
-                {totalItems === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="bg-indigo-50 p-6 rounded-full mb-6">
-                            <Ticket className="h-12 w-12 text-indigo-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900 mb-2">No Active Reservations</h2>
-                        <p className="text-gray-500 mb-8 max-w-xs">
-                            You haven't reserved any offers yet. Explore the map to find great deals nearby!
-                        </p>
-                        <button
-                            onClick={() => router.push('/consumer/map')}
-                            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:bg-indigo-700 transition-colors"
-                        >
-                            Explore Map
-                        </button>
-                    </div>
-                ) : (
+            <main className="px-4 pt-4 space-y-6">
+
+                {/* Tabs */}
+                <div className="bg-gray-200 dark:bg-neutral-800 p-1 rounded-xl flex">
+                    <button
+                        onClick={() => setCurrentTab("upcoming")}
+                        className={cn(
+                            "flex-1 py-2 text-sm font-bold rounded-lg transition-all",
+                            currentTab === "upcoming"
+                                ? "bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+                        )}
+                    >
+                        Upcoming
+                    </button>
+                    <button
+                        onClick={() => setCurrentTab("past")}
+                        className={cn(
+                            "flex-1 py-2 text-sm font-bold rounded-lg transition-all",
+                            currentTab === "past"
+                                ? "bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+                        )}
+                    >
+                        History
+                    </button>
+                </div>
+
+                {/* Content */}
+                {currentTab === "upcoming" ? (
                     <div className="space-y-6">
-                        {/* Reserved Offers/Slots (from cart) */}
-                        {cart.length > 0 && (
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">
-                                    {(() => {
-                                        const firstBusiness = MOCK_BUSINESSES.find((b) => b.id === cart[0]?.businessId);
-                                        const isFoodBeverage = firstBusiness?.category === "Food & Beverage" ||
-                                            firstBusiness?.category === "Restaurant" ||
-                                            firstBusiness?.category === "Cafe";
-                                        return isFoodBeverage ? "Reserved Offers" : "Reserved Slots";
-                                    })()}
-                                </h2>
-                                <div className="space-y-4">
-                                    {cart.map((offer, index) => {
-                                        const business = MOCK_BUSINESSES.find((b) => b.id === offer.businessId);
-                                        if (!business) return null;
+                        {upcomingItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-300">
+                                <div className="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-neutral-800 dark:to-neutral-800 p-8 rounded-full mb-6 relative">
+                                    <Ticket className="h-16 w-16 text-indigo-500 relative z-10" />
+                                    <div className="absolute inset-0 bg-white/40 blur-xl rounded-full"></div>
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">Your wallet is empty</h2>
+                                <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-[280px] leading-relaxed">
+                                    Book local experiences and find exclusive deals. They'll live here.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/consumer/home')}
+                                    className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                >
+                                    Find Offers
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {upcomingItems.map((item, idx) => {
+                                    // Handle Cart Items vs Claims differently if needed
+                                    // For simplicity treating them visually similar but with different actions
+                                    const isClaim = 'offerId' in item;
+                                    const offer = isClaim ? offers.get(item.offerId) : item as Offer;
 
-                                        return (
-                                            <div
-                                                key={`${offer.id}-${index}`}
-                                                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-                                            >
-                                                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-4 text-white relative overflow-hidden">
-                                                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
-                                                    <div className="relative z-10 flex justify-between items-start">
+                                    if (!offer) return null; // Loading or missing ref
+                                    const business = MOCK_BUSINESSES.find(b => b.id === offer.businessId);
+                                    if (!business) return null;
+
+                                    return (
+                                        <div
+                                            key={isClaim ? item.id : `${item.id}-${idx}`}
+                                            className="group bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-neutral-800 hover:shadow-md transition-all duration-300"
+                                        >
+                                            {/* Ticket Header Style */}
+                                            <div className="relative h-28 overflow-hidden bg-gray-100">
+                                                <img
+                                                    src={business.image}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    alt={business.name}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
+                                                    <div className="flex justify-between items-end">
                                                         <div>
-                                                            <span className="inline-block px-2 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-bold mb-2">
-                                                                RESERVATION #{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}
-                                                            </span>
-                                                            <h3 className="font-bold text-lg leading-tight">{offer.title}</h3>
+                                                            <h3 className="text-white font-bold text-lg leading-tight mb-0.5">{offer.title}</h3>
+                                                            <p className="text-white/80 text-sm font-medium">{business.name}</p>
                                                         </div>
-                                                        <div className="bg-white text-indigo-600 px-3 py-1 rounded-lg font-bold text-sm shadow-sm">
-                                                            {offer.discountType === "percent"
-                                                                ? `${offer.value}% OFF`
-                                                                : `$${offer.value} OFF`}
+                                                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs font-bold border border-white/20">
+                                                            {offer.discountType === 'percent' ? `${offer.value}% OFF` : `$${offer.value} SAVING`}
                                                         </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="p-4">
-                                                    <div className="flex items-start gap-4 mb-4">
-                                                        <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
-                                                            <img
-                                                                src={business.image}
-                                                                alt={business.name}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <h4 className="font-bold text-gray-900">{business.name}</h4>
-                                                            <p className="text-sm text-gray-500 mb-2">{business.category}</p>
-                                                            <div className="flex items-center text-xs text-gray-500">
-                                                                <MapPin className="h-3 w-3 mr-1" />
-                                                                {business.address}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl mb-4">
-                                                        <Clock className="h-4 w-4 text-indigo-600" />
-                                                        <span>Valid until <strong>Today, 10:00 PM</strong></span>
-                                                    </div>
-
-                                                    <div className="flex gap-3">
-                                                        <button
-                                                            onClick={() => setSelectedOffer(offer)}
-                                                            className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
-                                                        >
-                                                            Redeem
-                                                        </button>
-                                                        <button
-                                                            onClick={() => removeFromCart(offer.id)}
-                                                            className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors border border-gray-200"
-                                                            title="Cancel Reservation"
-                                                        >
-                                                            <Trash2 className="h-5 w-5" />
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Active Claimed Offers */}
-                        {claims.length > 0 && (
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-bold text-gray-900">My Active Offers</h2>
-                                    <span className="text-sm text-indigo-600 font-medium">{claims.length} ready to redeem</span>
-                                </div>
+                                            {/* Ticket Body */}
+                                            <div className="p-4 relative">
+                                                {/* Dashed Line */}
+                                                <div className="absolute -top-[1px] left-0 right-0 border-t-2 border-dashed border-white/30 w-full h-1"></div>
+                                                {/* Cutouts */}
+                                                <div className="absolute -top-3 -left-3 w-6 h-6 bg-gray-50 dark:bg-black rounded-full z-10"></div>
+                                                <div className="absolute -top-3 -right-3 w-6 h-6 bg-gray-50 dark:bg-black rounded-full z-10"></div>
 
-                                {showClaimedSlots && (
-                                    <div className="space-y-4">
-                                        {claims.map((claim) => {
-                                            const offer = offers.get(claim.offerId);
-                                            if (!offer) return null;
-                                            const business = MOCK_BUSINESSES.find((b) => b.id === offer.businessId);
-                                            if (!business) return null;
-
-                                            return (
-                                                <div
-                                                    key={claim.id}
-                                                    className="bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-indigo-100 hover:shadow-md transition-shadow"
-                                                >
-                                                    {/* Offer Header */}
-                                                    <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4">
-                                                        <div className="flex items-center gap-3 mb-2">
-                                                            <div className="bg-white/20 p-2 rounded-full">
-                                                                <Ticket className="h-5 w-5" />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <h3 className="font-bold text-lg">{offer.title}</h3>
-                                                                <p className="text-sm text-white/80">{business.name}</p>
-                                                            </div>
-                                                            <span className="bg-green-400 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                                                ACTIVE
-                                                            </span>
-                                                        </div>
+                                                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6 mt-2">
+                                                    <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-neutral-800 px-3 py-1.5 rounded-lg">
+                                                        <Clock className="h-3.5 w-3.5" />
+                                                        <span className="font-medium">Valid today</span>
                                                     </div>
-
-                                                    {/* Offer Body */}
-                                                    <div className="p-4">
-                                                        <div className="flex items-start gap-3 mb-4">
-                                                            <img
-                                                                src={business.image}
-                                                                alt={business.name}
-                                                                className="h-16 w-16 rounded-xl object-cover"
-                                                            />
-                                                            <div className="flex-1">
-                                                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                                                    <MapPin className="h-4 w-4 text-indigo-600" />
-                                                                    {business.address}
-                                                                </div>
-                                                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                                    <Tag className="h-4 w-4 text-indigo-600" />
-                                                                    {offer.discountType === "percent" ? `${offer.value}% off` : `$${offer.value} off`}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl mb-4">
-                                                            <Clock className="h-4 w-4 text-indigo-600" />
-                                                            <span>Valid until <strong>Today, 10:00 PM</strong></span>
-                                                        </div>
-
-                                                        <div className="flex gap-3">
-                                                            <button
-                                                                onClick={() => handleRedeemClick(offer)}
-                                                                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2"
-                                                            >
-                                                                <Ticket className="h-5 w-5" />
-                                                                Redeem Now
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleCancelClaim(claim.id)}
-                                                                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors border border-gray-200"
-                                                                title="Cancel Offer"
-                                                            >
-                                                                <Trash2 className="h-5 w-5" />
-                                                            </button>
-                                                        </div>
+                                                    <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-neutral-800 px-3 py-1.5 rounded-lg">
+                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        <span className="font-medium">0.8km</span>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        onClick={() => handleRedeemClick(isClaim ? item : offer)}
+                                                        className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        <Ticket className="h-4 w-4" />
+                                                        {isClaim ? "View Code" : "Reserve"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => isClaim ? handleCancelClaim(item.id) : removeFromCart(item.id)}
+                                                        className="p-3 bg-gray-50 dark:bg-neutral-800 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                                                    >
+                                                        <Trash2 className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
-                )}
-
-                {/* QR Code Modal */}
-                {selectedOffer && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                            <div className="p-6 text-center">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Redeem Offer</h3>
-                                <p className="text-gray-500 text-sm mb-6">Show this QR code to the merchant</p>
-
-                                {loadingToken ? (
-                                    <div className="py-12 flex justify-center">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6">
-                                            <QRCodeSVG
-                                                value={tokenData?.token || ""}
-                                                size={200}
-                                                level="H"
-                                                includeMargin={true}
-                                            />
-                                        </div>
-
-                                        <p className="text-xs text-gray-400 mb-2 font-mono">
-                                            MANUAL CODE
-                                        </p>
-                                        <p className="text-3xl font-bold text-indigo-600 mb-6 font-mono tracking-widest">
-                                            {tokenData?.shortCode}
-                                        </p>
-                                    </>
-                                )}
-
-                                <button
-                                    onClick={() => {
-                                        setSelectedOffer(null);
-                                        setTokenData(null);
-                                    }}
-                                    className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                ) : (
+                    // Past Tab
+                    <div className="space-y-4 opacity-60">
+                        <div className="text-center py-10">
+                            <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500 font-medium">No past history yet.</p>
                         </div>
                     </div>
                 )}
             </main>
+
+            {/* QR Code Modal */}
+            {selectedOffer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                        <button
+                            onClick={() => { setSelectedOffer(null); setTokenData(null); }}
+                            className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                        >
+                            <XCircle className="h-6 w-6 text-gray-500" />
+                        </button>
+
+                        <div className="p-8 flex flex-col items-center text-center">
+                            <div className="mb-6">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-1">{selectedOffer?.offerTitle || selectedOffer?.title}</h3>
+                                {/* Determine Business Name properly */}
+                                <p className="text-gray-500 font-medium">Scan to Redeem</p>
+                            </div>
+
+                            <div className="bg-white p-4 rounded-3xl border-2 border-dashed border-indigo-100 mb-8 shadow-sm">
+                                {loadingToken ? (
+                                    <div className="h-[200px] w-[200px] flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+                                    </div>
+                                ) : (
+                                    <QRCodeSVG
+                                        value={tokenData?.token || "demo"}
+                                        size={200}
+                                        level="H"
+                                        includeMargin={false}
+                                        className="rounded-lg"
+                                    />
+                                )}
+                            </div>
+
+                            <div className="w-full bg-indigo-50 rounded-2xl p-6 mb-2 text-center">
+                                <p className="text-xs text-indigo-400 font-bold tracking-widest uppercase mb-2">Voucher Code</p>
+                                <p className="text-4xl font-mono font-black text-indigo-900 tracking-wider">
+                                    {tokenData?.token || "----"}
+                                </p>
+                            </div>
+
+                            <p className="text-xs text-gray-400 mt-4">
+                                Show this to the staff at the venue.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

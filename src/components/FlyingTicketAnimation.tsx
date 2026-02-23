@@ -5,10 +5,12 @@ import { Ticket } from "lucide-react";
 
 interface FlyingIconProps {
     startPosition: { x: number; y: number };
+    targetId?: string;
+    text?: string;
     onComplete: () => void;
 }
 
-export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconProps) {
+export function FlyingTicketAnimation({ startPosition, targetId = "nav-item-offers", text, onComplete }: FlyingIconProps) {
     const [position, setPosition] = useState(startPosition);
     const [opacity, setOpacity] = useState(1);
     const [scale, setScale] = useState(1);
@@ -19,10 +21,11 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
         if (hasAnimated.current) return;
         hasAnimated.current = true;
 
-        // Get the reservations button position
-        const targetElement = document.querySelector('[data-reservations-button]');
+        // Get target
+        const targetElement = document.getElementById(targetId) || document.querySelector('[data-reservations-button]');
+
         if (!targetElement) {
-            console.log('FlyingTicketAnimation: Target element not found');
+            console.log('FlyingTicketAnimation: Target element not found', targetId);
             onComplete();
             return;
         }
@@ -46,10 +49,10 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
                 ? 4 * progress * progress * progress
                 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-            setPosition({
-                x: startPosition.x + (targetPosition.x - startPosition.x) * eased,
-                y: startPosition.y + (targetPosition.y - startPosition.y) * eased,
-            });
+            const currentX = startPosition.x + (targetPosition.x - startPosition.x) * eased;
+            const currentY = startPosition.y + (targetPosition.y - startPosition.y) * eased;
+
+            setPosition({ x: currentX, y: currentY });
 
             // Scale logic: Start big (1.2), stay big, shrink at very end
             if (progress < 0.8) {
@@ -75,7 +78,7 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
 
     return (
         <div
-            className="fixed z-[9999] pointer-events-none"
+            className="fixed z-[9999] pointer-events-none flex flex-col items-center"
             style={{
                 left: `${position.x}px`,
                 top: `${position.y}px`,
@@ -86,6 +89,11 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
             <div className="bg-indigo-600 text-white p-4 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.5)] border-2 border-white">
                 <Ticket className="h-8 w-8" />
             </div>
+            {text && (
+                <div className="mt-2 bg-white/90 backdrop-blur-md text-indigo-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg border border-indigo-100 whitespace-nowrap">
+                    {text}
+                </div>
+            )}
         </div>
     );
 }

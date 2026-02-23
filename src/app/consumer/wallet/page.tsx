@@ -6,37 +6,35 @@ import { Plus, Search, Coffee, TrendingUp, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { LogoHeader } from "@/components/consumer/LogoHeader";
+import { useRouter } from "next/navigation";
 
 export default function WalletHomePage() {
+    const router = useRouter();
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [storageUpdate, setStorageUpdate] = useState(0); // Force re-render on storage change
+    const [storageUpdate, setStorageUpdate] = useState(0);
 
-    // Listen for local storage changes (for demo sync)
     useEffect(() => {
         const handleStorage = () => setStorageUpdate(prev => prev + 1);
         window.addEventListener('storage', handleStorage);
-        // Also poll every 2 seconds just in case (since storage event only fires on other tabs)
         const interval = setInterval(handleStorage, 2000);
         return () => {
             window.removeEventListener('storage', handleStorage);
             clearInterval(interval);
         };
     }, []);
+
     const [sortBy, setSortBy] = useState<"closest" | "recent" | "alpha">("closest");
+
     const [showSearchModal, setShowSearchModal] = useState(false);
-
-    // Mock savings data - in production, fetch from redemption history
-    const [savingsThisMonth] = useState(46.30);
-    const [savingsLastMonth] = useState(41.50);
-    const [totalRedemptions] = useState(12);
-
     const userId = "user_123";
 
     useEffect(() => {
         fetchCards();
     }, []);
+
+
 
     const fetchCards = async () => {
         try {
@@ -44,16 +42,13 @@ export default function WalletHomePage() {
             let fetchedCards: Card[] = [];
             if (res.ok) {
                 const data = await res.json();
-                // API returns single card, but wrap in array for grid display
                 fetchedCards = data ? [data] : [];
             }
 
-            // Load from localStorage for demo
             if (typeof window !== 'undefined') {
                 const local = localStorage.getItem('demo_consumer_cards');
                 if (local) {
                     const localCards = JSON.parse(local);
-                    // Merge avoiding duplicates
                     localCards.forEach((lc: Card) => {
                         if (!fetchedCards.find(fc => fc.id === lc.id)) {
                             fetchedCards.push(lc);
@@ -61,7 +56,6 @@ export default function WalletHomePage() {
                     });
                 }
             }
-
             setCards(fetchedCards);
         } catch (e) {
             console.error(e);
@@ -70,39 +64,20 @@ export default function WalletHomePage() {
         }
     };
 
-    const createCard = async () => {
-        const res = await fetch("/api/card", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId }),
-        });
-        const data = await res.json();
-
-        // Prevent duplicates if backend returns existing card
-        if (!cards.find(c => c.id === data.id)) {
-            setCards([...cards, data]);
-        }
-    };
-
-    // Sort cards
     const sortedCards = [...cards].sort((a, b) => {
         if (sortBy === "closest") {
-            // Closest to reward (highest progress)
             const progressA = a.stamps / 10;
             const progressB = b.stamps / 10;
             return progressB - progressA;
         } else if (sortBy === "recent") {
-            // Most recently used
             const lastA = a.history[a.history.length - 1]?.timestamp || 0;
             const lastB = b.history[b.history.length - 1]?.timestamp || 0;
             return lastB - lastA;
         } else {
-            // Alphabetical (by program ID for now)
             return a.programId.localeCompare(b.programId);
         }
     });
 
-    // Filter by search
     const filteredCards = sortedCards.filter((card) =>
         card.programId.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -113,7 +88,6 @@ export default function WalletHomePage() {
         <div className="pb-20">
             <LogoHeader />
 
-            {/* Header with Search & Sort */}
             <header className="bg-white px-4 py-6 border-b border-gray-200 sticky top-0 z-10">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-2xl font-bold text-gray-900">Your Wallet</h1>
@@ -126,67 +100,36 @@ export default function WalletHomePage() {
                     </button>
                 </div>
 
-                {/* Search */}
                 <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search your loyalty cards..."
+                        placeholder="Search..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                 </div>
 
-                {/* Sort Options */}
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setSortBy("closest")}
-                        className={cn(
-                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                            sortBy === "closest"
-                                ? "bg-indigo-600 text-white"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        )}
-                    >
-                        By Progress
-                    </button>
-                    <button
-                        onClick={() => setSortBy("alpha")}
-                        className={cn(
-                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                            sortBy === "alpha"
-                                ? "bg-indigo-600 text-white"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        )}
-                    >
-                        A-Z
-                    </button>
+                <div className="flex gap-2 mb-4">
+                    <button onClick={() => setSortBy("closest")} className={cn("flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors", sortBy === "closest" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700")}>By Progress</button>
+                    <button onClick={() => setSortBy("alpha")} className={cn("flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors", sortBy === "alpha" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700")}>A-Z</button>
                 </div>
+
+
             </header>
 
-            {/* Cards Grid */}
             <div className="px-4 py-6">
                 {filteredCards.length === 0 ? (
                     <div className="text-center py-12">
                         <Coffee className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">No Loyalty Cards Yet</h3>
-                        <p className="text-gray-500 mb-4">Start earning rewards at your favorite places</p>
-                        <button
-                            onClick={() => setShowSearchModal(true)}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-                        >
-                            <Plus className="h-5 w-5" />
-                            Add Your First Card
-                        </button>
+                        <button onClick={() => setShowSearchModal(true)} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"><Plus className="h-5 w-5" /> Add Your First Card</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredCards.map((card) => {
-                            // Default to 10, but override from local storage if available
                             let stampsRequired = 10;
-
-                            // Check for custom styling from local storage demo
                             let customStyle = {};
                             let customLogo = null;
                             if (typeof window !== 'undefined') {
@@ -195,150 +138,74 @@ export default function WalletHomePage() {
                                     try {
                                         const p = JSON.parse(localProgram);
                                         if (p.name === card.programId) {
-                                            if (p.stampsRequired) {
-                                                stampsRequired = p.stampsRequired;
-                                            }
-                                            if (p.cardColor) {
-                                                customStyle = { background: `linear-gradient(135deg, ${p.cardColor}, #1a1a1a)` };
-                                            }
-                                            if (p.logo) {
-                                                // Enlarged logo as requested
-                                                customLogo = <img src={p.logo} alt="Logo" className="w-12 h-12 object-cover rounded-full border-2 border-white/20" />;
-                                            }
+                                            if (p.stampsRequired) stampsRequired = p.stampsRequired;
+                                            if (p.cardColor) customStyle = { background: `linear-gradient(135deg, ${p.cardColor}, #1a1a1a)` };
+                                            if (p.logo) customLogo = <img src={p.logo} alt="Logo" className="w-12 h-12 object-cover rounded-full border-2 border-white/20" />;
                                         }
                                     } catch (e) { }
                                 }
                             }
-
                             const progress = Math.min(100, (card.stamps / stampsRequired) * 100);
-
                             return (
-                                <Link
-                                    key={card.id}
-                                    href={`/consumer/wallet/${card.id}`}
-                                    className="block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-                                >
-                                    {/* Card Header */}
-                                    <div
-                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 text-white"
-                                        style={customStyle}
-                                    >
-                                        <div className="flex items-center justify-between mb-4">
-                                            {customLogo || <Coffee className="h-8 w-8" />}
-                                            <span className="text-sm font-medium bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">
-                                                {card.stamps} / {stampsRequired}
-                                            </span>
-                                        </div>
-                                        <h3 className="font-bold text-lg">{card.programId}</h3>
-                                        <p className="text-xs text-white/80">Loyalty Program</p>
+                                <Link key={card.id} href={`/consumer/wallet/${card.id}`} className="block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                                    <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 text-white" style={customStyle}>
+                                        <div className="flex items-center justify-between mb-4">{customLogo || <Coffee className="h-8 w-8" />}<span className="text-sm font-medium bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">{card.stamps} / {stampsRequired}</span></div>
+                                        <h3 className="font-bold text-lg">{card.programId}</h3><p className="text-xs text-white/80">Loyalty Program</p>
                                     </div>
-
-                                    {/* Progress Bar */}
                                     <div className="px-4 py-3">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs text-gray-600">Progress to Reward</span>
-                                            <span className="text-xs font-semibold text-indigo-600">{progress.toFixed(0)}%</span>
-                                        </div>
-                                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-                                                style={{ width: `${progress}%` }}
-                                            />
-                                        </div>
-                                        <p className="text-xs text-gray-500 mt-2">
-                                            {Math.max(0, stampsRequired - card.stamps)} more {Math.max(0, stampsRequired - card.stamps) === 1 ? 'stamp' : 'stamps'} to reward
-                                        </p>
+                                        <div className="flex items-center justify-between mb-2"><span className="text-xs text-gray-600">Progress to Reward</span><span className="text-xs font-semibold text-indigo-600">{progress.toFixed(0)}%</span></div>
+                                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500" style={{ width: `${progress}%` }} /></div>
+                                        <p className="text-xs text-gray-500 mt-2">{Math.max(0, stampsRequired - card.stamps)} more {Math.max(0, stampsRequired - card.stamps) === 1 ? 'stamp' : 'stamps'} to reward</p>
                                     </div>
                                 </Link>
                             );
                         })}
                     </div>
-                )}
+                )
+                }
             </div>
 
-
-            {/* Search Modal */}
             {showSearchModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
                     <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-gray-900">Add Loyalty Card</h2>
-                            <button
-                                onClick={() => setShowSearchModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            <button onClick={() => setShowSearchModal(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                                <Plus className="rotate-45" />
                             </button>
                         </div>
-
                         <div className="p-4 border-b border-gray-100">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search businesses..."
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500"
-                                    autoFocus
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                                <input type="text" placeholder="Search businesses..." className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500" autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                             </div>
                         </div>
-
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {/* Mock Results + Local Storage Result */}
                             {(() => {
                                 const results = [
                                     { name: "Daily Grind Coffee", category: "Cafe", logo: <Coffee className="w-5 h-5" /> },
                                     { name: "Bakers Delight", category: "Bakery", logo: <Coffee className="w-5 h-5" /> },
                                     { name: "Smoothie King", category: "Drinks", logo: <Coffee className="w-5 h-5" /> },
                                 ];
-
-                                // Add demo program if exists
                                 if (typeof window !== 'undefined') {
                                     const localProgram = localStorage.getItem('demo_loyalty_program');
                                     if (localProgram) {
                                         try {
                                             const p = JSON.parse(localProgram);
-                                            // Avoid duplicates if already in results (though unlikely for demo)
                                             if (!results.find(r => r.name === p.name)) {
-                                                results.unshift({
-                                                    name: p.name,
-                                                    category: "Local Business",
-                                                    logo: p.logo || <Coffee className="w-5 h-5" />
-                                                });
+                                                results.unshift({ name: p.name, category: "Local Business", logo: p.logo || <Coffee className="w-5 h-5" /> });
                                             }
-                                        } catch (e) {
-                                            console.error("Failed to parse local program", e);
-                                        }
+                                        } catch (e) { }
                                     }
                                 }
-
                                 return results.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase())).map((biz, i) => (
                                     <button
                                         key={i}
                                         onClick={() => {
-                                            // If it's the demo program, we need to add it specially or just use createCard which mocks it
-                                            // For now, let's just use createCard but ideally we'd pass the program ID
-                                            // Since the user specifically wants to see "Bakers Delight" (or whatever they named it),
-                                            // we should try to make the added card reflect that name.
-                                            // The current createCard just fetches a generic card.
-                                            // Let's manually add a card to the state for immediate feedback.
-
-                                            const newCard = {
-                                                id: `card_${Date.now()}`,
-                                                programId: biz.name, // Use the name as ID for display
-                                                userId: "user_123",
-                                                stamps: 0,
-                                                history: []
-                                            };
-
-                                            // Check if already exists
+                                            const newCard = { id: `card_${Date.now()}`, programId: biz.name, userId: "user_123", stamps: 0, history: [] };
                                             if (!cards.find(c => c.programId === biz.name)) {
                                                 const updatedCards = [...cards, newCard];
                                                 setCards(updatedCards);
-
-                                                // Persist to localStorage for demo
                                                 if (typeof window !== 'undefined') {
                                                     const existing = localStorage.getItem('demo_consumer_cards');
                                                     const localCards = existing ? JSON.parse(existing) : [];
@@ -346,25 +213,15 @@ export default function WalletHomePage() {
                                                     localStorage.setItem('demo_consumer_cards', JSON.stringify(localCards));
                                                 }
                                             }
-
                                             setShowSearchModal(false);
                                         }}
                                         className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left group"
                                     >
                                         <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 transition-colors overflow-hidden">
-                                            {typeof biz.logo === 'string' ? (
-                                                <img src={biz.logo} alt={biz.name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                biz.logo
-                                            )}
+                                            {typeof biz.logo === 'string' ? <img src={biz.logo} alt={biz.name} className="w-full h-full object-cover" /> : biz.logo}
                                         </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-gray-900">{biz.name}</h3>
-                                            <p className="text-sm text-gray-500">{biz.category}</p>
-                                        </div>
-                                        <div className="px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                            Add
-                                        </div>
+                                        <div className="flex-1"><h3 className="font-bold text-gray-900">{biz.name}</h3><p className="text-sm text-gray-500">{biz.category}</p></div>
+                                        <div className="px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">Add</div>
                                     </button>
                                 ));
                             })()}

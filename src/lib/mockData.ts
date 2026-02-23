@@ -16,8 +16,22 @@ export type Offer = {
     businessId: string;
     title: string;
     description: string;
-    expiresAt: number; // Timestamp
-    type: "DISCOUNT" | "FREE_ITEM" | "BOGO";
+    // Enhanced fields to match store.ts
+    discountType: "percent" | "fixed" | "bundle";
+    value: number;
+    startsAt?: number;
+    endsAt?: number;
+    expiresAt?: number; // Legacy support
+    radiusMeters?: number;
+    isActive?: boolean;
+    redemptionCount?: number;
+    inventory?: number;
+    bookingRequired?: boolean;
+    claimedCount?: number;
+    productType?: string;
+    imageUrl?: string;
+    originalPrice?: number;
+    type?: "DISCOUNT" | "FREE_ITEM" | "BOGO"; // Legacy support
 };
 
 export const CATEGORIES = [
@@ -261,6 +275,14 @@ export const MOCK_OFFERS: Offer[] = [
         description: "Get half off any latte between 2pm and 4pm.",
         expiresAt: Date.now() + 3600 * 1000 * 2, // 2 hours from now
         type: "DISCOUNT",
+        discountType: "percent",
+        value: 50,
+        startsAt: Date.now(),
+        endsAt: Date.now() + 3600 * 1000 * 2,
+        isActive: true,
+        inventory: 100,
+        claimedCount: 5,
+        bookingRequired: true,
     },
     {
         id: "o2",
@@ -269,6 +291,14 @@ export const MOCK_OFFERS: Offer[] = [
         description: "Free fries with any burger purchase.",
         expiresAt: Date.now() + 3600 * 1000 * 5, // 5 hours from now
         type: "FREE_ITEM",
+        discountType: "fixed",
+        value: 5,
+        startsAt: Date.now(),
+        endsAt: Date.now() + 3600 * 1000 * 5,
+        isActive: true,
+        inventory: 200,
+        claimedCount: 20,
+        bookingRequired: false,
     },
     {
         id: "o3",
@@ -277,5 +307,13 @@ export const MOCK_OFFERS: Offer[] = [
         description: "Bring a friend and get a free massage.",
         expiresAt: Date.now() + 3600 * 1000 * 24, // 24 hours from now
         type: "BOGO",
+        discountType: "bundle",
+        value: 100,
+        startsAt: Date.now(),
+        endsAt: Date.now() + 3600 * 1000 * 24,
+        isActive: true,
+        inventory: 10,
+        claimedCount: 1,
+        bookingRequired: true,
     },
 ];
