@@ -35,7 +35,7 @@ export function ProviderNav() {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-900 border-t border-white/10">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
             <input
                 ref={fileInputRef}
                 type="file"
@@ -43,47 +43,30 @@ export function ProviderNav() {
                 onChange={handleFileChange}
                 className="hidden"
             />
-            <div className="grid grid-cols-5 h-16">
+            <div className="grid grid-cols-5 h-24">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = pathname === tab.href;
-
-                    // Logo in center
-                    if (tab.name === "Logo") {
-                        return (
-                            <button
-                                key="logo"
-                                onClick={handleLogoClick}
-                                className="flex flex-col items-center justify-center group"
-                            >
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg -mt-6 border-4 border-neutral-900 overflow-hidden group-hover:scale-110 transition-transform">
-                                    {logoUrl ? (
-                                        <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Upload className="h-5 w-5 text-white" />
-                                    )}
-                                </div>
-                            </button>
-                        );
-                    }
 
                     return (
                         <Link
                             key={tab.href}
                             href={tab.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 text-xs transition-colors",
-                                isActive
-                                    ? "text-indigo-400"
-                                    : "text-white/60 hover:text-white/90"
+                                "flex flex-col items-center justify-center gap-1.5 transition-all text-gray-400 hover:text-gray-900",
+                                isActive && "text-brand"
                             )}
                         >
-                            {Icon && <Icon className="h-5 w-5" />}
-                            <span>{tab.name}</span>
+                            {Icon && <Icon className={cn("h-7 w-7 transition-transform", isActive && "scale-110 stroke-[2.5]")} />}
+                            <span className={cn(
+                                "text-[10px] font-black uppercase tracking-widest",
+                                isActive ? "opacity-100" : "opacity-60"
+                            )}>{tab.name}</span>
                         </Link>
                     );
                 })}
             </div>
         </nav>
+
     );
 }

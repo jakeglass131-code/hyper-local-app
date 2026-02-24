@@ -11,6 +11,16 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        brand: {
+          DEFAULT: "#ff6b3d", // Vibrant Orange
+          light: "#ff906d",
+          dark: "#e55a2d",
+        },
+        accent: {
+          DEFAULT: "#1f6d68", // Deep Green
+          dark: "#164f4b",
+        }
+
       },
       keyframes: {
         "scan-line": {

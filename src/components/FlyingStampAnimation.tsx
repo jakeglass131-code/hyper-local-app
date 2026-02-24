@@ -1,47 +1,49 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Ticket } from "lucide-react";
+import { Coffee } from "lucide-react";
 
 interface FlyingIconProps {
     startPosition: { x: number; y: number };
     onComplete: () => void;
 }
 
-export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconProps) {
+export function FlyingStampAnimation({ startPosition, onComplete }: FlyingIconProps) {
     const [position, setPosition] = useState(startPosition);
     const [opacity, setOpacity] = useState(1);
     const [scale, setScale] = useState(1);
+    const [rotation, setRotation] = useState(0);
     const hasAnimated = useRef(false);
 
     useEffect(() => {
-        // Prevent multiple animations from the same instance
         if (hasAnimated.current) return;
         hasAnimated.current = true;
 
-        // Get the reservations button position
-        const targetElement = document.querySelector('[data-offers-tab]');
-        if (!targetElement) {
-            console.log('FlyingTicketAnimation: Target element not found');
-            onComplete();
-            return;
-        }
+        // Target: Wallet icon in bottom nav (approximate bottom right for desktop, bottom center for mobile)
+        // For this demo, let's target the card grid area or just fly up and out
+        const targetElement = document.querySelector('[data-wallet-tab]');
 
-        const targetRect = targetElement.getBoundingClientRect();
-        const targetPosition = {
-            x: targetRect.left + targetRect.width / 2,
-            y: targetRect.top + targetRect.height / 2,
+        let targetPosition = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight - 50
         };
 
-        // Animate to target
-        const duration = 1200; // Slower for visibility
+        if (targetElement) {
+            const targetRect = targetElement.getBoundingClientRect();
+            targetPosition = {
+                x: targetRect.left + targetRect.width / 2,
+                y: targetRect.top + targetRect.height / 2,
+            };
+        }
+
+        const duration = 1000;
         const startTime = Date.now();
 
         const animate = () => {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
-            // Easing function (ease-in-out for smoother motion)
+            // Easing
             const eased = progress < 0.5
                 ? 4 * progress * progress * progress
                 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
@@ -51,16 +53,16 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
                 y: startPosition.y + (targetPosition.y - startPosition.y) * eased,
             });
 
-            // Scale logic: Start big (1.2), stay big, shrink at very end
+            setRotation(eased * 360);
+
             if (progress < 0.8) {
-                setScale(1.2);
+                setScale(1 + Math.sin(progress * Math.PI) * 0.5);
             } else {
-                setScale(1.2 - (progress - 0.8) * 5); // Shrink to ~0.2
+                setScale(Math.max(0, 1.5 - (progress - 0.8) * 7.5));
             }
 
-            // Fade out near the end
-            if (progress > 0.9) {
-                setOpacity(1 - (progress - 0.9) / 0.1);
+            if (progress > 0.8) {
+                setOpacity(1 - (progress - 0.8) / 0.2);
             }
 
             if (progress < 1) {
@@ -71,7 +73,7 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
         };
 
         requestAnimationFrame(animate);
-    }, [onComplete, startPosition.x, startPosition.y]);
+    }, []);
 
     return (
         <div
@@ -79,12 +81,12 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
             style={{
                 left: `${position.x}px`,
                 top: `${position.y}px`,
-                transform: `translate(-50%, -50%) scale(${scale})`,
+                transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
                 opacity,
             }}
         >
-            <div className="rounded-full border-2 border-white bg-[#ff6b3d] p-4 text-white shadow-[0_0_20px_rgba(255,107,61,0.5)]">
-                <Ticket className="h-8 w-8" />
+            <div className="bg-[#1e6a67] text-white p-3 rounded-xl shadow-xl border-2 border-white">
+                <Coffee className="h-6 w-6" />
             </div>
         </div>
     );

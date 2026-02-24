@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/lib/store";
+import { Card, Program } from "@/lib/store";
 import { Plus, Search, Coffee, TrendingUp, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { LogoHeader } from "@/components/consumer/LogoHeader";
+import { FlyingStampAnimation } from "@/components/FlyingStampAnimation";
 
 export default function WalletHomePage() {
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [availablePrograms, setAvailablePrograms] = useState<Program[]>([]);
     const [storageUpdate, setStorageUpdate] = useState(0); // Force re-render on storage change
 
     // Listen for local storage changes (for demo sync)
@@ -26,6 +28,7 @@ export default function WalletHomePage() {
     }, []);
     const [sortBy, setSortBy] = useState<"closest" | "recent" | "alpha">("closest");
     const [showSearchModal, setShowSearchModal] = useState(false);
+    const [activeAnimation, setActiveAnimation] = useState<{ x: number, y: number } | null>(null);
 
     // Mock savings data - in production, fetch from redemption history
     const [savingsThisMonth] = useState(46.30);
@@ -36,7 +39,20 @@ export default function WalletHomePage() {
 
     useEffect(() => {
         fetchCards();
-    }, []);
+        fetchAvailablePrograms();
+    }, [storageUpdate]);
+
+    const fetchAvailablePrograms = async () => {
+        try {
+            const res = await fetch("/api/business");
+            if (res.ok) {
+                const data = await res.json();
+                setAvailablePrograms(data);
+            }
+        } catch (e) {
+            console.error("Failed to fetch programs", e);
+        }
+    };
 
     const fetchCards = async () => {
         try {
@@ -107,6 +123,11 @@ export default function WalletHomePage() {
         card.programId.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Filter out programs the user already has
+    const discoverablePrograms = availablePrograms.filter(p =>
+        !cards.find(c => c.programId === p.id || c.programId === p.name)
+    );
+
     if (loading) return <div className="p-8">Loading...</div>;
 
     return (
@@ -143,7 +164,7 @@ export default function WalletHomePage() {
                     <button
                         onClick={() => setSortBy("closest")}
                         className={cn(
-                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all active:scale-95",
                             sortBy === "closest"
                                 ? "bg-indigo-600 text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -154,7 +175,7 @@ export default function WalletHomePage() {
                     <button
                         onClick={() => setSortBy("alpha")}
                         className={cn(
-                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all active:scale-95",
                             sortBy === "alpha"
                                 ? "bg-indigo-600 text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -164,6 +185,61 @@ export default function WalletHomePage() {
                     </button>
                 </div>
             </header>
+
+            {/* Discover Section - Only show if new programs available */}
+            {discoverablePrograms.length > 0 && (
+                <div className="px-4 py-8 bg-[#eaf3ef] border-y border-[#d1e0d7]">
+                    <div className="flex items-center gap-2 mb-4">
+                        <TrendingUp className="h-5 w-5 text-[#1e6a67]" />
+                        <h2 className="text-lg font-bold text-gray-900">New Programs Near You</h2>
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                        {discoverablePrograms.map((program) => (
+                            <div
+                                key={program.id}
+                                className="min-w-[280px] bg-white rounded-2xl p-4 shadow-sm border border-[#d1e0d7] flex items-center gap-4 animate-in fade-in slide-in-from-right-4 duration-500"
+                            >
+                                <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 overflow-hidden shrink-0">
+                                    {program.logo ? (
+                                        <img src={program.logo} alt={program.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Coffee className="w-6 h-6 text-gray-400" />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-gray-900 truncate">{program.name}</h3>
+                                    <p className="text-xs text-gray-500 mb-2">{program.stampsRequired} stamps for reward</p>
+                                    <button
+                                        onClick={async (e) => { // 3. Update the 'Join Program' click handler to trigger the animation
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            setActiveAnimation({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+
+                                            const newCard = {
+                                                id: `card_${Date.now()}`,
+                                                programId: program.id,
+                                                userId: "user_123",
+                                                stamps: 0,
+                                                history: []
+                                            };
+                                            const updatedCards = [...cards, newCard];
+                                            setCards(updatedCards);
+                                            // Persist for demo
+                                            const existing = localStorage.getItem('demo_consumer_cards');
+                                            const localCards = existing ? JSON.parse(existing) : [];
+                                            localCards.push(newCard);
+                                            localStorage.setItem('demo_consumer_cards', JSON.stringify(localCards));
+                                            setStorageUpdate(s => s + 1);
+                                        }}
+                                        className="text-xs font-bold text-white bg-[#1e6a67] px-4 py-1.5 rounded-lg hover:opacity-90 transition-all active:scale-90"
+                                    >
+                                        Join Program
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Cards Grid */}
             <div className="px-4 py-6">
@@ -194,7 +270,7 @@ export default function WalletHomePage() {
                                 if (localProgram) {
                                     try {
                                         const p = JSON.parse(localProgram);
-                                        if (p.name === card.programId) {
+                                        if (p.id === card.programId || p.name === card.programId) {
                                             if (p.stampsRequired) {
                                                 stampsRequired = p.stampsRequired;
                                             }
@@ -216,7 +292,7 @@ export default function WalletHomePage() {
                                 <Link
                                     key={card.id}
                                     href={`/consumer/wallet/${card.id}`}
-                                    className="block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                                    className="block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all active:scale-[0.98] duration-100"
                                 >
                                     {/* Card Header */}
                                     <div
@@ -371,6 +447,13 @@ export default function WalletHomePage() {
                         </div>
                     </div>
                 </div>
+            )}
+            {/* Animations */}
+            {activeAnimation && (
+                <FlyingStampAnimation
+                    startPosition={activeAnimation}
+                    onComplete={() => setActiveAnimation(null)}
+                />
             )}
         </div>
     );

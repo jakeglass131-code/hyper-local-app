@@ -113,29 +113,40 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
     const totalSteps = 4;
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <header className="mb-6">
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden relative">
+            {/* Background Accent */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand/5 rounded-full blur-[100px]" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-accent/5 rounded-full blur-[100px]" />
+
+            <header className="mb-8 relative z-10">
                 {step > 1 && (
                     <button
                         onClick={() => setStep(step - 1)}
-                        className="flex items-center text-indigo-600 mb-4 hover:text-indigo-700"
+                        className="flex items-center text-gray-400 mb-6 hover:text-gray-900 transition-colors group"
                     >
-                        <ArrowLeft className="h-5 w-5 mr-2" />
-                        Back
+                        <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-xs font-black uppercase tracking-widest">Back</span>
                     </button>
                 )}
-                <h2 className="text-2xl font-bold text-gray-900">{initialData ? "Edit Offer" : "Create Offer"}</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                    Step {step} of {totalSteps}
-                </p>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-1">Campaign Architect</p>
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tighter">{initialData ? "Update Offer" : "New Offer"}</h2>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Step</p>
+                        <p className="text-xl font-black text-gray-900 leading-none">{step}<span className="text-gray-300">/{totalSteps}</span></p>
+                    </div>
+                </div>
             </header>
 
+
             {/* Progress bar */}
-            <div className="mb-6 flex gap-2">
+            <div className="mb-10 flex gap-2 relative z-10">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                     <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full ${i < step ? "bg-indigo-600" : "bg-gray-200"
+                        className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i < step ? "bg-brand shadow-[0_0_10px_rgba(124,58,237,0.5)]" : "bg-white/5"
                             }`}
                     />
                 ))}
@@ -143,19 +154,19 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
 
             {/* Step 1: Basic Details */}
             {step === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-8 relative z-10">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Offer Title</label>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Offer Title</label>
                         <input
                             value={offerData.title}
                             onChange={(e) => updateData({ title: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                            placeholder="e.g. 50% Off Coffee"
+                            className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand focus:ring-1 focus:ring-brand/50 transition-all placeholder:text-gray-300"
+                            placeholder="e.g. ULTIMATE CAFFEINE BOOST"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Description <span className="text-xs text-gray-500">(Max 50 words)</span>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">
+                            Strategy Brief <span className="text-gray-300 capitalize font-bold ml-2">(Limit: 50 words)</span>
                         </label>
                         <textarea
                             value={offerData.description}
@@ -165,27 +176,26 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
                                     updateData({ description: e.target.value });
                                 }
                             }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                            rows={3}
-                            placeholder="Describe your offer..."
+                            className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand focus:ring-1 focus:ring-brand/50 transition-all placeholder:text-gray-300 min-h-[120px]"
+                            placeholder="Describe the tactical advantage..."
                         />
-                        <p className="text-xs text-right text-gray-500 mt-1">
-                            {offerData.description.split(/\s+/).filter(Boolean).length}/50 words
+                        <p className="text-[10px] text-right text-gray-300 mt-2 font-black uppercase tracking-widest">
+                            {offerData.description.split(/\s+/).filter(Boolean).length} / 50 words
                         </p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Offer Image</label>
-                        <div className="mt-1 flex items-center gap-4">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Visual asset</label>
+                        <div className="flex items-center gap-6">
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="h-24 w-24 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors"
+                                className="h-32 w-32 rounded-3xl bg-gray-50 flex items-center justify-center border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer hover:bg-gray-100 hover:border-brand/50 transition-all group shrink-0"
                             >
                                 {offerData.imageUrl ? (
                                     <img src={offerData.imageUrl} alt="Offer" className="h-full w-full object-cover" />
                                 ) : (
                                     <div className="text-center p-2">
-                                        <Upload className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                                        <span className="text-xs text-gray-500">Upload</span>
+                                        <Upload className="h-8 w-8 text-gray-300 mx-auto mb-2 group-hover:text-brand transition-colors" />
+                                        <span className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Upload</span>
                                     </div>
                                 )}
                             </div>
@@ -196,69 +206,71 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
                                 className="hidden"
                                 accept="image/*"
                             />
-                            <div className="text-sm text-gray-500">
-                                <p>Tap to upload an image.</p>
-                                <p className="text-xs mt-1">JPG, PNG up to 5MB</p>
+                            <div className="text-[10px] text-gray-400 font-bold leading-relaxed">
+                                <p className="text-gray-600 mb-1">PRO-VISUAL REQUIREMENT</p>
+                                <p>Optimal scaling for HD displays.</p>
+                                <p>HEIC, JPG, PNG — MAX 5MB</p>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Product Type</label>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Sector Classification</label>
                         <select
                             value={offerData.productType}
                             onChange={(e) => updateData({ productType: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                            className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand transition-all appearance-none cursor-pointer"
                         >
-                            <option value="food">Food & Beverage</option>
-                            <option value="retail">Retail</option>
-                            <option value="service">Service</option>
-                            <option value="entertainment">Entertainment</option>
+                            <option value="food">Gastronomy & Libations</option>
+                            <option value="retail">Commodity Exchange</option>
+                            <option value="service">Elite Infrastructure</option>
+                            <option value="entertainment">Sensory Experience</option>
                         </select>
                     </div>
+
                 </div>
             )}
 
             {/* Step 2: Discount Details */}
             {step === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-10 relative z-10">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Discount Type</label>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Incentive Architecture</label>
+                        <div className="grid grid-cols-2 gap-4">
                             {(["percent", "fixed"] as const).map((type) => (
                                 <button
                                     key={type}
                                     onClick={() => updateData({ discountType: type })}
-                                    className={`rounded-md px-4 py-3 text-sm font-medium border ${offerData.discountType === type
-                                        ? "bg-indigo-600 text-white border-indigo-600"
-                                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    className={`rounded-2xl px-6 py-5 text-xs font-black transition-all border uppercase tracking-widest ${offerData.discountType === type
+                                        ? "bg-brand text-white border-brand shadow-lg shadow-brand/20"
+                                        : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100 hover:text-gray-900"
                                         }`}
                                 >
-                                    {type === "percent" ? "% Percentage Off" : "$ Fixed Amount Off"}
+                                    {type === "percent" ? "Percentage Off" : "Cash Reduction"}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                {offerData.discountType === "percent" ? "Percentage %" : "Amount $"}
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">
+                                {offerData.discountType === "percent" ? "Ratio %" : "Amount $"}
                             </label>
                             <input
                                 type="number"
                                 value={offerData.value}
                                 onChange={(e) => updateData({ value: Number(e.target.value) })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                                className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand transition-all"
                             />
                         </div>
                         {offerData.discountType === "percent" && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Original Price $</label>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Baseline Price $</label>
                                 <input
                                     type="number"
                                     value={offerData.originalPrice || ""}
                                     onChange={(e) => updateData({ originalPrice: Number(e.target.value) })}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                                    className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand transition-all"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -266,12 +278,12 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Inventory (slots)</label>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Scarcity Engine (slots)</label>
                         <input
                             type="number"
                             value={offerData.inventory}
                             onChange={(e) => updateData({ inventory: Number(e.target.value) })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                            className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand transition-all"
                         />
                     </div>
                 </div>
@@ -279,35 +291,37 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
 
             {/* Step 3: Duration */}
             {step === 3 && (
-                <div className="space-y-4">
+                <div className="space-y-10 relative z-10">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Duration (hours)</label>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Temporal Window (hours)</label>
                         <input
                             type="number"
                             step="0.1"
                             value={offerData.duration}
                             onChange={(e) => updateData({ duration: Number(e.target.value) })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                            className="bg-gray-50 border border-gray-200 rounded-2xl w-full px-5 py-4 text-gray-900 font-bold outline-none focus:border-brand transition-all"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
-                            Can be decimal (e.g. 0.5 for 30 mins)
+                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">
+                            Precision Input: 0.5 = 30-min tactical window
                         </p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Location Radius (meters)</label>
-                        <input
-                            type="range"
-                            min="100"
-                            max="5000"
-                            step="100"
-                            value={offerData.radiusMeters}
-                            onChange={(e) => updateData({ radiusMeters: Number(e.target.value) })}
-                            className="mt-1 block w-full"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>100m</span>
-                            <span className="font-medium text-indigo-600">{offerData.radiusMeters}m</span>
-                            <span>5000m (Max)</span>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Geofence Radius (meters)</label>
+                        <div className="px-2">
+                            <input
+                                type="range"
+                                min="100"
+                                max="5000"
+                                step="100"
+                                value={offerData.radiusMeters}
+                                onChange={(e) => updateData({ radiusMeters: Number(e.target.value) })}
+                                className="w-full h-1.5 bg-gray-100 rounded-full appearance-none cursor-pointer accent-brand"
+                            />
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black text-gray-400 mt-4 uppercase tracking-[0.2em]">
+                            <span>100m (Hyper-Local)</span>
+                            <span className="text-brand text-xs tracking-widest">{offerData.radiusMeters}M RADAR</span>
+                            <span>5000m (District)</span>
                         </div>
                     </div>
                 </div>
@@ -315,65 +329,52 @@ export function CreateOfferWizard({ userId, businesses, onComplete, onCancel, in
 
             {/* Step 4: Review */}
             {step === 4 && (
-                <div className="space-y-4">
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <h3 className="font-semibold mb-4 text-gray-900">Review Your Offer</h3>
-                        <div className="space-y-2 text-sm text-gray-600">
-                            <div className="flex justify-between">
-                                <span>Title:</span>
-                                <span className="font-medium text-gray-900">{offerData.title}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Discount:</span>
-                                <span className="font-medium text-gray-900">
-                                    {offerData.discountType === "percent"
-                                        ? `${offerData.value}%`
-                                        : `$${offerData.value}`}
-                                </span>
-                            </div>
-                            {offerData.originalPrice && (
-                                <div className="flex justify-between">
-                                    <span>Original Price:</span>
-                                    <span className="font-medium text-gray-900">${offerData.originalPrice}</span>
+                <div className="space-y-8 relative z-10">
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 shadow-inner overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Check size={80} className="text-brand" />
+                        </div>
+                        <h3 className="text-[10px] font-black text-brand mb-8 uppercase tracking-[0.3em]">Deployment Preview</h3>
+                        <div className="grid gap-6">
+                            {[
+                                { label: "Campaign Identity", value: offerData.title },
+                                { label: "Incentive Value", value: offerData.discountType === "percent" ? `${offerData.value}%` : `$${offerData.value}`, color: "text-brand" },
+                                { label: "Temporal Span", value: `${offerData.duration} HOURS` },
+                                { label: "Operational Radius", value: `${offerData.radiusMeters}M` },
+                                { label: "Unit Scarcity", value: `${offerData.inventory} NODES` }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</span>
+                                    <span className={`text-sm font-black uppercase tracking-tight ${item.color || "text-gray-900"}`}>{item.value}</span>
                                 </div>
-                            )}
-                            <div className="flex justify-between">
-                                <span>Duration:</span>
-                                <span className="font-medium text-gray-900">{offerData.duration} hours</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Radius:</span>
-                                <span className="font-medium text-gray-900">{offerData.radiusMeters}m</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Inventory:</span>
-                                <span className="font-medium text-gray-900">{offerData.inventory} slots</span>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             )}
 
+
             {/* Navigation */}
-            <div className="mt-6 flex gap-3">
+            <div className="mt-12 flex gap-4 relative z-10">
                 {step < totalSteps ? (
                     <button
                         onClick={handleNext}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3"
+                        className="flex-1 flex items-center justify-center gap-3 rounded-2xl bg-brand hover:brightness-110 text-white font-black py-5 uppercase tracking-widest shadow-xl shadow-brand/20 active:scale-95 transition-all text-sm"
                     >
-                        Next
+                        Forward
                         <ArrowRight className="h-5 w-5" />
                     </button>
                 ) : (
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium py-3 disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-3 rounded-2xl bg-accent hover:brightness-110 text-white font-black py-5 uppercase tracking-widest shadow-xl shadow-accent/20 active:scale-95 transition-all disabled:opacity-50 text-sm"
                     >
-                        {loading ? "Saving..." : initialData ? "Update Offer" : "Publish Offer"}
+                        {loading ? "Transmitting..." : initialData ? "Confirm Update" : "Initiate Deployment"}
                         <Check className="h-5 w-5" />
                     </button>
                 )}
+
             </div>
         </div>
     );

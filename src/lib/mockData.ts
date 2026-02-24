@@ -46,16 +46,27 @@ const generateMockBusinesses = (count: number): Business[] => {
         const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
         const street = STREETS[Math.floor(Math.random() * STREETS.length)];
 
+        // Center on Perth but spread out towards Subiaco, Highgate, Fremantle, and the Coast
+        const lat = -31.9505 + (Math.random() - 0.5) * 0.25;
+        const lng = 115.8605 + (Math.random() - 0.5) * 0.3;
+
         businesses.push({
             id: `gen_b_${i}`,
             name: `${adj} ${noun} ${suffix}`,
             category: category,
-            description: `The best ${category.toLowerCase()} in town. Come visit us!`,
-            address: `${Math.floor(Math.random() * 900) + 1} ${street}, Perth`,
-            lat: -31.9500 + (Math.random() - 0.5) * 0.1, // Random location around Perth
-            lng: 115.8600 + (Math.random() - 0.5) * 0.1,
-            image: `https://source.unsplash.com/800x600/?${category.toLowerCase()}`, // Dynamic image
-            rating: 3.5 + Math.random() * 1.5, // 3.5 to 5.0
+            description: `A unique ${category.toLowerCase()} experience in the heart of our community.`,
+            address: `${Math.floor(Math.random() * 500) + 1} ${street}, Perth WA`,
+            lat: lat,
+            lng: lng,
+            image: `https://images.unsplash.com/photo-${[
+                '1554118811-1e0d58224f24', // Coffee
+                '1555396273-367ea4eb4db5', // Restaurant
+                '1559339352-11d035aa65de', // Beauty
+                '1534438327276-14e5300c3a48', // Gym
+                '1441986300917-64674bd600d8', // Retail
+                '1506126613408-eca07ce68773'  // Wellness
+            ][Math.floor(Math.random() * 6)]}?w=800&q=80`,
+            rating: 3.8 + Math.random() * 1.2,
         });
     }
     return businesses;

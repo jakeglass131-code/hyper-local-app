@@ -47,25 +47,25 @@ export function BusinessAnalytics({ data, onFilterChange }: BusinessAnalyticsPro
     const { overview, calendar } = data;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* Controls */}
-            <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+            <div className="flex flex-col md:flex-row justify-between gap-6 items-start md:items-center">
                 {/* Date Filter */}
-                <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-xl">
                     {(["7d", "30d", "90d"] as const).map((r) => (
                         <button
                             key={r}
                             onClick={() => handleRangeChange(r)}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${range === r ? "bg-indigo-50 text-indigo-600" : "text-gray-600 hover:bg-gray-50"
+                            className={`px-4 py-2 text-xs font-black rounded-xl transition-all uppercase tracking-widest ${range === r ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-white/40 hover:text-white hover:bg-white/5"
                                 }`}
                         >
-                            {r === "7d" ? "1 Week" : r === "30d" ? "1 Month" : "3 Months"}
+                            {r === "7d" ? "1W" : r === "30d" ? "1M" : "3M"}
                         </button>
                     ))}
-                    <div className="h-4 w-px bg-gray-200 mx-1" />
+                    <div className="h-4 w-px bg-white/10 mx-1" />
                     <button
                         onClick={() => handleRangeChange("custom")}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${range === "custom" ? "bg-indigo-50 text-indigo-600" : "text-gray-600 hover:bg-gray-50"
+                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all uppercase tracking-widest ${range === "custom" ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-white/40 hover:text-white hover:bg-white/5"
                             }`}
                     >
                         Custom
@@ -74,44 +74,44 @@ export function BusinessAnalytics({ data, onFilterChange }: BusinessAnalyticsPro
 
                 {/* Custom Date Inputs */}
                 {range === "custom" && (
-                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-4">
+                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4">
                         <input
                             type="date"
                             value={customStart}
                             onChange={(e) => setCustomStart(e.target.value)}
-                            className="text-sm border border-gray-200 rounded-md px-2 py-1.5"
+                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-brand transition-all"
                         />
-                        <span className="text-gray-400">-</span>
+                        <span className="text-white/20">/</span>
                         <input
                             type="date"
                             value={customEnd}
                             onChange={(e) => setCustomEnd(e.target.value)}
-                            className="text-sm border border-gray-200 rounded-md px-2 py-1.5"
+                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-brand transition-all"
                         />
                         <button
                             onClick={applyCustomRange}
-                            className="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
+                            className="px-4 py-2 bg-brand text-white text-xs font-black rounded-xl hover:brightness-110 transition-all uppercase tracking-widest"
                         >
-                            Apply
+                            Sync
                         </button>
                     </div>
                 )}
 
                 {/* View Toggle */}
-                <div className="bg-gray-100 p-1 rounded-lg inline-flex ml-auto">
+                <div className="bg-white/5 p-1 rounded-2xl inline-flex ml-auto border border-white/10">
                     <button
                         onClick={() => setView("dashboard")}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${view === "dashboard" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
+                        className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${view === "dashboard" ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-white/40 hover:text-white"
                             }`}
                     >
-                        Dashboard
+                        Intelligence
                     </button>
                     <button
                         onClick={() => setView("calendar")}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${view === "calendar" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
+                        className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${view === "calendar" ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-white/40 hover:text-white"
                             }`}
                     >
-                        Revenue Calendar
+                        Heatmap
                     </button>
                 </div>
             </div>
@@ -119,176 +119,193 @@ export function BusinessAnalytics({ data, onFilterChange }: BusinessAnalyticsPro
             {view === "dashboard" ? (
                 <div className="space-y-8">
                     {/* Top Level Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <MetricCard
                             title="Total Revenue"
                             value={`$${overview.totalRevenue}`}
                             icon={DollarSign}
                             trend="+12%"
-                            color="green"
+                            color="brand"
                         />
                         <MetricCard
                             title="Total Redemptions"
                             value={overview.totalRedemptions}
                             icon={ShoppingBag}
                             trend="+5%"
-                            color="blue"
+                            color="accent"
                         />
                         <MetricCard
                             title="Impressions"
                             value={overview.totalImpressions}
                             icon={Activity}
                             trend="+8%"
-                            color="purple"
+                            color="brand"
                         />
                         <MetricCard
-                            title="ROI"
+                            title="ROI INDEX"
                             value={overview.roi}
                             icon={TrendingUp}
                             trend="+15%"
-                            color="indigo"
+                            color="accent"
                         />
                     </div>
 
                     {/* Detailed Funnel */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6">Conversion Funnel</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center relative">
-                            <div>
-                                <div className="text-sm text-gray-500 mb-1">Impressions</div>
-                                <div className="text-2xl font-bold">{overview.totalImpressions}</div>
-                                <div className="text-xs text-gray-400 mt-1">Total Views</div>
+                    <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl backdrop-blur-3xl overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <TrendingUp size={120} className="text-brand" />
+                        </div>
+                        <h3 className="text-sm font-black text-white mb-10 uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+                            Dynamic Conversion Pipeline
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center relative">
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-[0.2em]">Exposures</div>
+                                <div className="text-4xl font-black text-white tracking-tighter">{overview.totalImpressions}</div>
+                                <div className="text-[10px] text-white/20 mt-2 font-bold uppercase">Reach Intensity</div>
                             </div>
-                            <div className="hidden md:block absolute top-1/2 left-[22%] w-[6%] border-t-2 border-dashed border-gray-200" />
-                            <div>
-                                <div className="text-sm text-gray-500 mb-1">Clicks</div>
-                                <div className="text-2xl font-bold">{overview.totalClicks}</div>
-                                <div className="text-xs text-green-600 mt-1">
-                                    {((overview.totalClicks / overview.totalImpressions) * 100).toFixed(1)}% CTR
+                            <div className="hidden md:block absolute top-[40%] left-[21%] w-[8%] border-t border-dashed border-white/10" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-[0.2em]">Interactions</div>
+                                <div className="text-4xl font-black text-white tracking-tighter">{overview.totalClicks}</div>
+                                <div className="text-[10px] text-accent mt-2 font-black uppercase tracking-widest">
+                                    {((overview.totalClicks / overview.totalImpressions) * 100).toFixed(1)}% Yield
                                 </div>
                             </div>
-                            <div className="hidden md:block absolute top-1/2 left-[47%] w-[6%] border-t-2 border-dashed border-gray-200" />
-                            <div>
-                                <div className="text-sm text-gray-500 mb-1">Redemptions</div>
-                                <div className="text-2xl font-bold">{overview.totalRedemptions}</div>
-                                <div className="text-xs text-green-600 mt-1">
-                                    {((overview.totalRedemptions / overview.totalClicks) * 100).toFixed(1)}% Conv.
+                            <div className="hidden md:block absolute top-[40%] left-[46%] w-[8%] border-t border-dashed border-white/10" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-[0.2em]">Conversions</div>
+                                <div className="text-4xl font-black text-white tracking-tighter">{overview.totalRedemptions}</div>
+                                <div className="text-[10px] text-brand mt-2 font-black uppercase tracking-widest">
+                                    {((overview.totalRedemptions / overview.totalClicks) * 100).toFixed(1)}% Flow
                                 </div>
                             </div>
-                            <div className="hidden md:block absolute top-1/2 left-[72%] w-[6%] border-t-2 border-dashed border-gray-200" />
-                            <div>
-                                <div className="text-sm text-gray-500 mb-1">Revenue</div>
-                                <div className="text-2xl font-bold text-green-600">${overview.totalRevenue}</div>
-                                <div className="text-xs text-gray-400 mt-1">Total Sales</div>
+                            <div className="hidden md:block absolute top-[40%] left-[71%] w-[8%] border-t border-dashed border-white/10" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-[0.2em]">Capital Flow</div>
+                                <div className="text-4xl font-black text-brand tracking-tighter">${overview.totalRevenue}</div>
+                                <div className="text-[10px] text-white/20 mt-2 font-bold uppercase underline decoration-brand/30">Gross Settlement</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Secondary Metrics Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Customer Insights */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Users className="h-5 w-5 text-blue-500" />
-                                Customer Insights
+                        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl">
+                            <h3 className="text-xs font-black text-white/40 mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Users className="h-4 w-4 text-brand" />
+                                Demographics
                             </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">New vs Returning</span>
-                                    <span className="font-medium">{overview.newVsReturning}</span>
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-end">
+                                    <span className="text-xs font-bold text-white/60">Retention Flux</span>
+                                    <span className="text-xl font-black text-white tracking-tighter">{overview.newVsReturning}</span>
                                 </div>
-                                <div className="w-full bg-gray-100 rounded-full h-2">
-                                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: "30%" }} />
+                                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-brand h-full rounded-full shadow-[0_0_10px_rgba(124,58,237,0.5)]" style={{ width: "65%" }} />
                                 </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                    <span className="text-sm text-gray-600">Avg Order Value</span>
-                                    <span className="font-medium">${overview.aov}</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                    <span className="text-sm text-gray-600">Avg Visits/Customer</span>
-                                    <span className="font-medium">2.4</span>
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black uppercase text-white/20 tracking-widest">Avg Transaction</span>
+                                        <span className="text-sm font-black text-white">${overview.aov}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-white/40">
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Velocity Rating</span>
+                                        <span className="text-sm font-black text-brand">2.4x</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Financial Health */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <DollarSign className="h-5 w-5 text-green-500" />
-                                Financial Health
+                        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl">
+                            <h3 className="text-xs font-black text-white/40 mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-accent" />
+                                Fiscal Radar
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Gross Revenue</span>
-                                    <span className="font-medium">${overview.totalRevenue}</span>
+                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Gross Liquidity</span>
+                                    <span className="text-sm font-black text-white tracking-tight">${overview.totalRevenue}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Discount Cost</span>
-                                    <span className="font-medium text-red-500">-${overview.costOfDiscounts}</span>
+                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Burn / Discounts</span>
+                                    <span className="text-sm font-black text-red-500">-${overview.costOfDiscounts}</span>
                                 </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                    <span className="text-sm font-medium text-gray-900">Net Revenue</span>
-                                    <span className="font-bold text-green-600">${overview.netRevenue}</span>
+                                <div className="pt-5 border-t border-white/5 mt-5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-black text-white uppercase tracking-widest">Net Settlement</span>
+                                        <span className="text-2xl font-black text-accent tracking-tighter">${overview.netRevenue}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Loyalty Metrics */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Award className="h-5 w-5 text-purple-500" />
-                                Loyalty Program
+                        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl">
+                            <h3 className="text-xs font-black text-white/40 mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Award className="h-4 w-4 text-brand" />
+                                Ecosystem Loyalty
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">New Signups</span>
-                                    <span className="font-medium">+{overview.loyaltySignups}</span>
+                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">New Recruits</span>
+                                    <span className="text-sm font-black text-accent">+{overview.loyaltySignups}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Rewards Redeemed</span>
-                                    <span className="font-medium">{overview.rewardsRedeemed}</span>
+                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Claimed Tokens</span>
+                                    <span className="text-sm font-black text-white">{overview.rewardsRedeemed}</span>
                                 </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                    <span className="text-sm text-gray-600">Active Members</span>
-                                    <span className="font-medium">142</span>
+                                <div className="pt-5 border-t border-white/5 mt-5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Active Node Base</span>
+                                        <span className="text-lg font-black text-white">142</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="space-y-6">
-                    {/* Revenue Calendar */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-indigo-500" />
-                            Revenue Calendar
+                <div className="space-y-8">
+                    {/* Revenue Heatmap */}
+                    <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl">
+                        <h3 className="text-sm font-black text-white mb-8 uppercase tracking-widest flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-brand" />
+                            Activity Heatmap
                         </h3>
 
-                        <div className="grid grid-cols-7 gap-2 mb-2">
-                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                <div key={day} className="text-center text-xs font-medium text-gray-400 uppercase">
+                        <div className="grid grid-cols-7 gap-3 mb-4">
+                            {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                                <div key={day} className="text-center text-[10px] font-black text-white/20 tracking-widest">
                                     {day}
                                 </div>
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-7 gap-3">
                             {calendar.map((day, i) => {
-                                const intensity = day.revenue > 400 ? 'bg-indigo-600 text-white' :
-                                    day.revenue > 200 ? 'bg-indigo-400 text-white' :
-                                        day.revenue > 100 ? 'bg-indigo-200 text-indigo-900' :
-                                            'bg-gray-50 text-gray-400';
+                                const intensity = day.revenue > 400 ? 'bg-brand shadow-[0_0_15px_rgba(124,58,237,0.4)]' :
+                                    day.revenue > 200 ? 'bg-brand/60' :
+                                        day.revenue > 100 ? 'bg-brand/30' :
+                                            'bg-white/5 hover:bg-white/10';
+
+                                const isSelected = selectedDate?.date === day.date;
 
                                 return (
                                     <button
                                         key={i}
                                         onClick={() => setSelectedDate(day)}
-                                        className={`aspect-square rounded-lg p-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${intensity} ${selectedDate?.date === day.date ? 'ring-2 ring-offset-2 ring-indigo-500' : ''
+                                        className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 group relative ${intensity} ${isSelected ? 'ring-2 ring-brand ring-offset-4 ring-offset-[#0B0B0F]' : ''
                                             }`}
                                     >
-                                        <span className="text-xs font-medium">{new Date(day.date).getDate()}</span>
-                                        <span className="text-[10px] font-bold mt-1">${day.revenue}</span>
+                                        <span className={`text-[10px] font-black ${day.revenue > 200 ? 'text-white' : 'text-white/40'}`}>{new Date(day.date).getDate()}</span>
+                                        {day.revenue > 0 && (
+                                            <span className={`text-[8px] font-black mt-1 ${day.revenue > 200 ? 'text-white/80' : 'text-brand'}`}>${day.revenue}</span>
+                                        )}
+                                        <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </button>
                                 );
                             })}
@@ -297,47 +314,53 @@ export function BusinessAnalytics({ data, onFilterChange }: BusinessAnalyticsPro
 
                     {/* Date Detail Panel */}
                     {selectedDate && (
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-in slide-in-from-bottom-4">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">
-                                    Details for {new Date(selectedDate.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                                </h3>
+                        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
+                            <div className="flex justify-between items-center mb-10">
+                                <div>
+                                    <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-1">Temporal Audit</p>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter">
+                                        {new Date(selectedDate.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                                    </h3>
+                                </div>
                                 <button
                                     onClick={() => setSelectedDate(null)}
-                                    className="text-sm text-gray-500 hover:text-gray-900"
+                                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-white/40 hover:text-white transition-all"
                                 >
-                                    Close
+                                    <ArrowDownRight className="w-5 h-5 rotate-45" />
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-sm text-gray-500">Revenue</div>
-                                    <div className="text-xl font-bold text-green-600">${selectedDate.revenue}</div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                                <div className="p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                                    <div className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">Liquidity</div>
+                                    <div className="text-2xl font-black text-accent tracking-tighter">${selectedDate.revenue}</div>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-sm text-gray-500">Redemptions</div>
-                                    <div className="text-xl font-bold text-blue-600">{selectedDate.redemptions}</div>
+                                <div className="p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                                    <div className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">Events</div>
+                                    <div className="text-2xl font-black text-brand tracking-tighter">{selectedDate.redemptions}</div>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-sm text-gray-500">Impressions</div>
-                                    <div className="text-xl font-bold">{selectedDate.impressions}</div>
+                                <div className="p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                                    <div className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">Visibility</div>
+                                    <div className="text-2xl font-black text-white tracking-tighter">{selectedDate.impressions}</div>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-sm text-gray-500">Clicks</div>
-                                    <div className="text-xl font-bold">{selectedDate.clicks}</div>
+                                <div className="p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                                    <div className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">Interests</div>
+                                    <div className="text-2xl font-black text-white tracking-tighter">{selectedDate.clicks}</div>
                                 </div>
                             </div>
 
-                            <h4 className="font-semibold text-gray-900 mb-4">Offer Performance</h4>
-                            <div className="space-y-3">
+                            <h4 className="text-xs font-black text-white/40 uppercase tracking-[0.2em] mb-6">Campaign Performance Hierarchy</h4>
+                            <div className="grid gap-3">
                                 {selectedDate.offers.map((offer: any) => (
-                                    <div key={offer.offerId} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                                        <div>
-                                            <div className="font-medium text-gray-900">{offer.offerName}</div>
-                                            <div className="text-xs text-gray-500">{offer.redemptions} redemptions</div>
+                                    <div key={offer.offerId} className="flex items-center justify-between p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-2 h-2 rounded-full bg-brand group-hover:animate-ping" />
+                                            <div>
+                                                <div className="text-sm font-black text-white uppercase tracking-tight">{offer.offerName}</div>
+                                                <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{offer.redemptions} Successful Validations</div>
+                                            </div>
                                         </div>
-                                        <div className="font-bold text-green-600">
+                                        <div className="text-xl font-black text-accent tracking-tighter">
                                             ${offer.revenue}
                                         </div>
                                     </div>
@@ -352,27 +375,27 @@ export function BusinessAnalytics({ data, onFilterChange }: BusinessAnalyticsPro
 }
 
 function MetricCard({ title, value, icon: Icon, trend, color }: any) {
-    const colors: any = {
-        green: "bg-green-100 text-green-600",
-        blue: "bg-blue-100 text-blue-600",
-        purple: "bg-purple-100 text-purple-600",
-        indigo: "bg-indigo-100 text-indigo-600",
-        red: "bg-red-100 text-red-600",
-    };
+    const isBrand = color === "brand";
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-                <div className={`p-2 rounded-lg ${colors[color]}`}>
-                    <Icon className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    {trend}
-                </span>
+        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl backdrop-blur-3xl group hover:border-white/20 transition-all relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                <Icon size={120} />
             </div>
-            <div>
-                <p className="text-sm text-gray-500">{title}</p>
-                <p className="text-2xl font-bold mt-1">{value}</p>
+            <div className="flex items-center justify-between mb-8">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${isBrand ? "bg-brand/20 text-brand" : "bg-accent/20 text-accent"
+                    }`}>
+                    <Icon className="h-6 w-6" />
+                </div>
+                <div className="flex flex-col items-end">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${trend.startsWith('+') ? 'text-accent bg-accent/10' : 'text-red-500 bg-red-500/10'}`}>
+                        {trend}
+                    </span>
+                </div>
+            </div>
+            <div className="relative z-10">
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">{title}</p>
+                <p className="text-3xl font-black text-white tracking-tighter">{value}</p>
             </div>
         </div>
     );

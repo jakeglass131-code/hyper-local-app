@@ -1,11 +1,13 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const LOGO_STORAGE_KEY = "app-logo";
 
 export function LogoHeader() {
+    const router = useRouter();
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,7 +38,7 @@ export function LogoHeader() {
     };
 
     return (
-        <div className="flex justify-center py-4 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
+        <div className="bg-white px-5 pt-4 pb-2 flex items-center justify-between border-b border-gray-100">
             <input
                 ref={fileInputRef}
                 type="file"
@@ -46,17 +48,31 @@ export function LogoHeader() {
             />
             <button
                 onClick={handleLogoClick}
-                className="group relative w-20 h-20 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg hover:scale-105 transition-transform overflow-hidden"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+                aria-label="Upload logo"
             >
                 {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    <span
+                        className="h-6 w-6 rounded-md border border-brand/40 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${logoUrl})` }}
+                    />
                 ) : (
-                    <div className="flex flex-col items-center gap-1">
-                        <Upload className="h-6 w-6 text-white" />
-                        <span className="text-[10px] text-white/80">Add Logo</span>
-                    </div>
+                    <Upload className="h-4 w-4 text-brand" />
                 )}
+                <span className="text-sm font-bold tracking-tight">
+                    {logoUrl ? "Sync Brand" : "Setup Brand"}
+                </span>
+            </button>
+
+            <button
+                onClick={() => router.push("/consumer/profile")}
+                className="relative group rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm active:scale-95 transition-all overflow-hidden"
+                aria-label="Profile"
+            >
+                <div className="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <User className="h-4 w-4 text-brand relative z-10" />
             </button>
         </div>
     );
+
 }

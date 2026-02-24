@@ -1,73 +1,180 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, SlidersHorizontal, Clock, MapPin, Star, Users, Tag, Ticket, TrendingUp, Zap, Sparkles, Coffee as CoffeeIcon, Utensils, Moon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import {
+    ChevronDown,
+    Clock3,
+    Heart,
+    MapPin,
+    Search,
+    SlidersHorizontal,
+    Star,
+    Store,
+    Upload,
+    User,
+    X,
+} from "lucide-react";
 import { MOCK_BUSINESSES, CATEGORIES } from "@/lib/mockData";
 import { useConsumerStore } from "@/store/consumerStore";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Offer } from "@/lib/store";
-import { LogoHeader } from "@/components/consumer/LogoHeader";
-import FavoriteStar from "@/components/FavoriteStar";
 import { FlyingTicketAnimation } from "@/components/FlyingTicketAnimation";
-import { getTimeRemaining, calculateDistanceAndTime, calculateSavings, getCategoryIcon } from "@/lib/displayHelpers";
-import { getQuickPick, getCurrentMealPeriod, getTimeWindowOffers, COLLECTIONS } from "@/lib/recommendations";
+import { calculateDistanceAndTime } from "@/lib/displayHelpers";
 
-const userId = "user_123"; // TODO: Replace with auth
+const userId = "user_123";
+const DISTANCE_OPTIONS = ["500m", "1km", "5km", "10km+"] as const;
+const DEFAULT_DISTANCE = "10km+" as const;
+
+function getDistanceLimitMeters(distance: (typeof DISTANCE_OPTIONS)[number]): number {
+    if (distance === "500m") return 500;
+    if (distance === "1km") return 1000;
+    if (distance === "5km") return 5000;
+    return 10_000;
+}
+
+function formatKm(km: number): string {
+    return km.toFixed(1).replace(/\.0$/, "");
+}
+
+function getHeaderRadius(distance: (typeof DISTANCE_OPTIONS)[number]): string {
+    if (distance === "500m") return "within 0.5 km";
+    if (distance === "1km") return "within 1 km";
+    if (distance === "5km") return "within 5 km";
+    return "within 10 km";
+}
+
+function getOfferPrice(slot: Offer): string {
+    const base = slot.originalPrice ?? 11.99;
+    if (slot.discountType === "percent") {
+        return `$${(base * (1 - slot.value / 100)).toFixed(2)}`;
+    }
+    if (slot.discountType === "fixed") {
+        return `$${Math.max(base - slot.value, 1).toFixed(2)}`;
+    }
+    return `$${(base / 2).toFixed(2)}`;
+}
 
 export default function HomePage() {
     const router = useRouter();
+
     const [search, setSearch] = useState("");
-    const { preferences, setPreferences, toggleFavourite, isFavourite, addClaim, addToCart, cart, location } = useConsumerStore();
     const [showFilters, setShowFilters] = useState(false);
     const [liveSlots, setLiveSlots] = useState<Offer[]>([]);
     const [claiming, setClaiming] = useState<string | null>(null);
-    const [selectedDistance, setSelectedDistance] = useState<string>("500m");
+    const [selectedDistance, setSelectedDistance] = useState<(typeof DISTANCE_OPTIONS)[number]>(DEFAULT_DISTANCE);
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
-    const [selectedRating, setSelectedRating] = useState<number | null>(null);
-    const [openNow, setOpenNow] = useState(false);
     const [hasLoyalty, setHasLoyalty] = useState(false);
     const [acceptsBookings, setAcceptsBookings] = useState(false);
     const [flyingAnimations, setFlyingAnimations] = useState<Array<{ id: string; startPosition: { x: number; y: number } }>>([]);
-    const [feedView, setFeedView] = useState<"near" | "trending" | "ending">("near");
-    const [showQuickPick, setShowQuickPick] = useState(false);
-    const [quickPickResults, setQuickPickResults] = useState<any[]>([]);
-    const [cartBump, setCartBump] = useState(false);
+    const [locationLabel, setLocationLabel] = useState("Locating...");
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const logoInputRef = useRef<HTMLInputElement | null>(null);
 
-    // Animate cart badge on change
+    const {
+        preferences,
+        setPreferences,
+        toggleFavourite,
+        isFavourite,
+        addClaim,
+        addToCart,
+        location,
+        setLocation,
+    } = useConsumerStore();
+
+    const userLoc = location || { lat: -31.9523, lng: 115.8613 };
+
+    const businessById = useMemo(() => {
+        return new Map(MOCK_BUSINESSES.map((business) => [business.id, business]));
+    }, []);
+
     useEffect(() => {
-        if (cart.length > 0) {
-            setCartBump(true);
-            const timer = setTimeout(() => setCartBump(false), 300);
-            return () => clearTimeout(timer);
+        const savedLogo = localStorage.getItem("app-logo");
+        if (savedLogo) {
+            setLogoPreview(savedLogo);
         }
-    }, [cart.length]);
+    }, []);
 
-    // Fetch live slots on mount
     useEffect(() => {
         fetchLiveSlots();
     }, []);
+
+    useEffect(() => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+            setLocationLabel("Location unavailable");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setLocation({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                });
+            },
+            (error) => {
+                console.warn("Location access unavailable:", error.message);
+                if (error.code === error.PERMISSION_DENIED) {
+                    setLocationLabel("Enable location access");
+                } else {
+                    setLocationLabel("Current location");
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
+    }, [setLocation]);
+
+    useEffect(() => {
+        if (!location) return;
+
+        const controller = new AbortController();
+        const loadLocationName = async () => {
+            try {
+                setLocationLabel("Locating...");
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${location.lat}&lon=${location.lng}`,
+                    { signal: controller.signal }
+                );
+                if (!res.ok) throw new Error(`Reverse geocode failed: ${res.status}`);
+
+                const data = await res.json();
+                const addr = data?.address || {};
+                const name =
+                    addr.city ||
+                    addr.town ||
+                    addr.village ||
+                    addr.suburb ||
+                    addr.county ||
+                    addr.state ||
+                    "Current location";
+
+                setLocationLabel(name);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") return;
+                console.warn("Reverse geocoding failed:", error);
+                setLocationLabel("Current location");
+            }
+        };
+
+        loadLocationName();
+        return () => controller.abort();
+    }, [location]);
 
     const fetchLiveSlots = async () => {
         try {
             const res = await fetch("/api/offers");
             const offers: Offer[] = await res.json();
-
-            // Filter for booking-required offers with inventory
-            const slots = offers
-                .filter((o) => o.bookingRequired && o.claimedCount < o.inventory)
-                .sort((a, b) => a.endsAt - b.endsAt); // Ending soon first
-
+            const slots = offers.filter((offer) => offer.claimedCount < offer.inventory);
             setLiveSlots(slots);
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
         }
     };
 
-    const handleClaimSlot = async (offerId: string, event: React.MouseEvent<HTMLButtonElement>) => {
-        // Prevent duplicate animations if already claiming
+    const handleClaimSlot = async (offerId: string, event: MouseEvent<HTMLButtonElement>) => {
         if (claiming) return;
+
+        event.stopPropagation();
 
         const rect = event.currentTarget.getBoundingClientRect();
         const startPosition = {
@@ -75,10 +182,9 @@ export default function HomePage() {
             y: rect.top + rect.height / 2,
         };
 
-        // Create single animation
-        setFlyingAnimations(prev => [...prev, { id: `${offerId}-${Date.now()}`, startPosition }]);
-
+        setFlyingAnimations((prev) => [...prev, { id: `${offerId}-${Date.now()}`, startPosition }]);
         setClaiming(offerId);
+
         try {
             const res = await fetch("/api/claims", {
                 method: "POST",
@@ -90,464 +196,225 @@ export default function HomePage() {
                 const claim = await res.json();
                 addClaim(claim.id);
 
-                // Find the offer and add to cart, synced with animation landing (1.2s)
-                const slot = liveSlots.find(s => s.id === offerId);
+                const slot = liveSlots.find((item) => item.id === offerId);
                 if (slot) {
                     setTimeout(() => {
                         addToCart(slot);
                     }, 1200);
                 }
 
-                fetchLiveSlots(); // Refresh to update inventory
+                fetchLiveSlots();
             } else {
                 const error = await res.json();
                 console.error("Failed to claim slot:", error.error);
             }
-        } catch (e) {
-            console.error("Network error:", e);
+        } catch (error) {
+            console.error("Network error:", error);
         } finally {
             setClaiming(null);
         }
     };
 
-    // Quick Pick Handler
-    const handleQuickPick = () => {
-        const userPrefs = {
-            categories: preferences.categories,
-            budgetMax: 20,
-            walkingDistanceMax: 1000,
-        };
-
-        const userLoc = location || { lat: -31.9523, lng: 115.8613 };
-
-        const picks = getQuickPick(liveSlots, userPrefs, userLoc);
-        setQuickPickResults(picks);
-        setShowQuickPick(true);
-    };
-
-    // Filter Logic
-    console.log("Search Term:", search);
-    console.log("Total Businesses:", MOCK_BUSINESSES.length);
-    console.log("Live Slots:", liveSlots.length);
-
-    const filteredBusinesses = MOCK_BUSINESSES.filter((b) => {
+    const filteredSlots = useMemo(() => {
         const searchLower = search.toLowerCase();
+        const maxDistance = getDistanceLimitMeters(selectedDistance);
 
-        // Fuzzy match helper (simple inclusion + common typos)
-        const fuzzyMatch = (text: string, term: string) => {
-            if (text.includes(term)) return true;
-            // Handle specific common typos reported by user
-            if (term === "cofee" && text.includes("coffee")) return true;
-            return false;
-        };
+        return liveSlots.filter((slot) => {
+            const business = businessById.get(slot.businessId);
+            if (!business) return false;
 
-        // Check if business matches
-        const matchesBusinessInfo =
-            fuzzyMatch(b.name.toLowerCase(), searchLower) ||
-            fuzzyMatch(b.category.toLowerCase(), searchLower);
+            if (search) {
+                const slotMatch = slot.title.toLowerCase().includes(searchLower) || slot.description.toLowerCase().includes(searchLower);
+                const businessMatch = business.name.toLowerCase().includes(searchLower) || business.category.toLowerCase().includes(searchLower);
+                if (!slotMatch && !businessMatch) return false;
+            }
 
-        // Check if any of this business's offers match
-        const hasMatchingOffer = liveSlots.some(slot =>
-            slot.businessId === b.id && (
-                fuzzyMatch(slot.title.toLowerCase(), searchLower) ||
-                fuzzyMatch(slot.description.toLowerCase(), searchLower)
-            )
-        );
-
-        const matchesCategory =
-            preferences.categories.length === 0 ||
-            preferences.categories.includes(b.category);
-
-        const result = (matchesBusinessInfo || hasMatchingOffer) && matchesCategory;
-        if (search && result) {
-            console.log("Match found:", b.name, "Info:", matchesBusinessInfo, "Offer:", hasMatchingOffer);
-        }
-        return result;
-    });
-
-    // Filter Live Slots based on all active filters
-    const filteredSlots = liveSlots.filter((slot) => {
-        const business = MOCK_BUSINESSES.find((b) => b.id === slot.businessId);
-        if (!business) return false;
-
-        // 1. Search
-        if (search) {
-            const searchLower = search.toLowerCase();
-            const matchesName = business.name.toLowerCase().includes(searchLower);
-            const matchesCategory = business.category.toLowerCase().includes(searchLower);
-            const matchesTitle = slot.title.toLowerCase().includes(searchLower);
-            const matchesDesc = slot.description.toLowerCase().includes(searchLower);
-
-            if (!matchesName && !matchesCategory && !matchesTitle && !matchesDesc) {
+            if (preferences.categories.length > 0 && !preferences.categories.includes(business.category)) {
                 return false;
             }
+
+            const { distanceMeters } = calculateDistanceAndTime(userLoc.lat, userLoc.lng, business.lat, business.lng);
+            if (distanceMeters > maxDistance) return false;
+
+            if (selectedPrice !== null && slot.value > selectedPrice) return false;
+
+            if (acceptsBookings && !slot.bookingRequired) return false;
+
+            return true;
+        });
+    }, [liveSlots, search, selectedDistance, selectedPrice, acceptsBookings, preferences.categories, businessById, userLoc.lat, userLoc.lng]);
+
+    const recommended = useMemo(() => {
+        return [...filteredSlots]
+            .sort((a, b) => b.claimedCount - a.claimedCount)
+            .slice(0, 10);
+    }, [filteredSlots]);
+
+    const endingSoon = useMemo(() => {
+        return [...filteredSlots]
+            .sort((a, b) => a.endsAt - b.endsAt)
+            .slice(0, 10);
+    }, [filteredSlots]);
+
+    const tomorrow = useMemo(() => {
+        const now = new Date();
+        const tomorrowDate = new Date(now);
+        tomorrowDate.setDate(now.getDate() + 1);
+
+        const tomorrowKey = tomorrowDate.toDateString();
+
+        const slots = filteredSlots.filter((slot) => new Date(slot.startsAt).toDateString() === tomorrowKey);
+        if (slots.length > 0) {
+            return slots.sort((a, b) => a.startsAt - b.startsAt).slice(0, 10);
         }
 
-        // 2. Categories
-        if (preferences.categories.length > 0 && !preferences.categories.includes(business.category)) {
-            return false;
-        }
+        return [...filteredSlots].sort((a, b) => a.startsAt - b.startsAt).slice(0, 10);
+    }, [filteredSlots]);
 
-        // 3. Distance
-        if (selectedDistance) {
-            const userLoc = location || { lat: -31.9523, lng: 115.8613 };
-            const { distanceMeters } = calculateDistanceAndTime(
-                userLoc.lat,
-                userLoc.lng,
-                business.lat,
-                business.lng
-            );
+    const sections = [
+        { title: "Recommended for you", items: recommended },
+        { title: "Save before it's too late", items: endingSoon },
+        { title: "Pick up tomorrow", items: tomorrow },
+    ];
 
-            const maxDistKm = selectedDistance === "500m" ? 0.5 : selectedDistance === "1km" ? 1 : selectedDistance === "5km" ? 5 : 100;
-            if (distanceMeters > maxDistKm * 1000) return false;
-        }
+    const activeFilterCount =
+        preferences.categories.length +
+        (selectedDistance !== DEFAULT_DISTANCE ? 1 : 0) +
+        (selectedPrice !== null ? 1 : 0) +
+        (hasLoyalty ? 1 : 0) +
+        (acceptsBookings ? 1 : 0);
 
+    const resetFilters = () => {
+        setPreferences({ categories: [], liveDealsOnly: false });
+        setSelectedDistance(DEFAULT_DISTANCE);
+        setSelectedPrice(null);
+        setHasLoyalty(false);
+        setAcceptsBookings(false);
+    };
 
+    const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
 
-        // 5. Price (Optional - keeping consistent with previous logic of skipping for now)
-        if (selectedPrice !== null) {
-            // Assuming slot.value is the price or discount. 
-            // If it's a discount, we might need the original price.
-            // For now, let's assume we filter by the final price if available, 
-            // or just skip if we don't have price data.
-            // The mock data structure for Offer is: { id, businessId, title, description, discountType, value, ... }
-            // If discountType is 'fixed', value is the discount amount.
-            // We don't strictly have "price" in the Offer interface in this file context, 
-            // but let's assume we can't filter by price accurately without it.
-            // However, the user asked for it. Let's look at how price filter was implemented in the UI.
-            // It sets `selectedPrice` (number).
-            // Let's assume for now we don't filter slots by price unless we add a price field to Offer.
-            // Or maybe we filter by "value" if it's a fixed price offer? 
-            // Actually, usually offers are "discounts". 
-            // Let's leave price out of slot filtering for now to be safe, or just apply it if it makes sense.
-            // The prompt implies "based on my filters".
-            // Let's check `filteredBusinesses` again. It doesn't filter by price either.
-            // So consistent behavior is fine.
-        }
-
-        return true;
-    });
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                const result = reader.result;
+                setLogoPreview(result);
+                localStorage.setItem("app-logo", result);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
 
     return (
-        <div className="pb-24">
-            {/* Logo Header */}
-            <LogoHeader />
-
-            {/* Header */}
-            <header className="sticky top-0 z-10 bg-white dark:bg-neutral-900 px-4 py-3 shadow-sm border-b border-gray-100 dark:border-neutral-800">
-                <div className="flex items-center space-x-3">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search places & deals..."
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                // Clear category filters when searching to ensure global search
-                                if (e.target.value && preferences.categories.length > 0) {
-                                    setPreferences({ categories: [] });
-                                }
-                            }}
-                            className="w-full rounded-full bg-gray-100 dark:bg-neutral-800 py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white placeholder:text-gray-500"
-                        />
-                    </div>
+        <div className="min-h-screen bg-[#f6f8f5] pb-28 text-[#1f2a2a]">
+            <header className="sticky top-0 z-20 border-b border-[#dfe6df] bg-[#f6f8f5]/95 px-5 pb-5 pt-4 backdrop-blur-xl">
+                <div className="mb-7 flex items-center">
+                    <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                    />
                     <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="rounded-full bg-gray-100 dark:bg-neutral-800 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="inline-flex items-center gap-2 rounded-xl border border-[#d6dfd8] bg-white px-3 py-2 text-[#1f2a2a] shadow-sm hover:bg-[#f1f5f1] transition-all active:scale-95"
+                        aria-label="Upload logo"
                     >
-                        <SlidersHorizontal className="h-5 w-5" />
-                    </button>
-                    <button
-                        onClick={() => router.push('/consumer/reservations')}
-                        className="relative rounded-full bg-gray-100 dark:bg-neutral-800 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700"
-                        data-reservations-button
-                    >
-                        <Ticket className="h-5 w-5" />
-                        {cart?.length > 0 && (
-                            <span className={cn(
-                                "absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-neutral-900 transition-transform",
-                                cartBump ? "scale-150" : "scale-100"
-                            )}>
-                                {cart.length}
-                            </span>
+                        {logoPreview ? (
+                            <span
+                                className="h-6 w-6 rounded-md border border-[#ff6b3d]/40 bg-cover bg-center"
+                                style={{ backgroundImage: `url(${logoPreview})` }}
+                            />
+                        ) : (
+                            <Upload className="h-4 w-4 text-[#ff6b3d]" />
                         )}
+                        <span className="text-sm font-bold tracking-tight">
+                            {logoPreview ? "Sync Brand" : "Setup Brand"}
+                        </span>
                     </button>
+                </div>
+
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <button className="flex items-center gap-1 text-[22px] font-bold text-[#1f2a2a]">
+                            <MapPin className="h-5 w-5 text-[#ff6b3d]" />
+                            {locationLabel}
+                            <ChevronDown className="h-4 w-4 text-[#8a9791]" />
+                        </button>
+                        <p className="text-[14px] font-medium text-[#6f7b76]">{getHeaderRadius(selectedDistance)}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowFilters(true)}
+                            className="relative overflow-hidden rounded-xl border border-[#d6dfd8] bg-white px-3 py-2 text-[#1f2a2a] shadow-sm active:scale-95 transition-all"
+                            aria-label="Open filters"
+                        >
+                            <div className="absolute inset-0 bg-[#ff6b3d]/10 opacity-0 hover:opacity-100 transition-opacity" />
+                            <SlidersHorizontal className="h-4 w-4 relative z-10" />
+                            {activeFilterCount > 0 && (
+                                <span className="absolute -right-1 -top-1 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-[#ff6b3d] text-[10px] font-bold text-white">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => router.push("/consumer/profile")}
+                            className="relative group rounded-xl border border-[#d6dfd8] bg-white px-3.5 py-2.5 text-[#1f2a2a] shadow-sm active:scale-95 transition-all overflow-hidden"
+                            aria-label="Profile"
+                        >
+                            <div className="absolute inset-0 bg-[#ff6b3d]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <User className="h-5 w-5 text-[#ff6b3d] relative z-10" />
+                        </button>
+
+                    </div>
+                </div>
+
+                <div className="relative mt-5">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8a9791]" />
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        value={search}
+                        onChange={(event) => {
+                            setSearch(event.target.value);
+                            if (event.target.value && preferences.categories.length > 0) {
+                                setPreferences({ categories: [] });
+                            }
+                        }}
+                        className="h-14 w-full rounded-2xl border border-[#d6dfd8] bg-white pl-12 pr-4 text-[16px] text-[#1f2a2a] outline-none placeholder:text-[#8a9791] focus:ring-2 focus:ring-[#ff6b3d]/25 transition-all font-medium"
+                    />
                 </div>
             </header>
 
-            {/* Filter Modal */}
-            {showFilters && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 bg-black/50 z-40 transition-opacity"
-                        onClick={() => setShowFilters(false)}
-                    />
-
-                    {/* Modal */}
-                    <div className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-900 rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-5">
-                        <div className="sticky top-0 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-4 py-4 rounded-t-3xl">
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-base text-gray-900 dark:text-white">Filters</h3>
-                                <button
-                                    onClick={() => {
-                                        setPreferences({ categories: [], liveDealsOnly: false });
-                                        setSelectedDistance("500m");
-                                        setSelectedPrice(null);
-                                        setSelectedRating(null);
-                                        setOpenNow(false);
-                                        setHasLoyalty(false);
-                                        setAcceptsBookings(false);
-                                    }}
-                                    className="text-xs text-indigo-600 font-medium"
-                                >
-                                    Reset All
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="px-4 py-4">
-                            {/* Categories */}
-                            <div className="mb-5">
-                                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Categories</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {CATEGORIES.map((cat) => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => {
-                                                const current = preferences.categories;
-                                                const newCats = current.includes(cat)
-                                                    ? current.filter((c) => c !== cat)
-                                                    : [...current, cat];
-                                                setPreferences({ categories: newCats });
-                                            }}
-                                            className={cn(
-                                                "rounded-full px-4 py-2 text-xs font-medium transition-colors",
-                                                preferences.categories.includes(cat)
-                                                    ? "bg-indigo-600 text-white"
-                                                    : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700"
-                                            )}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="mb-5">
-                                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Distance</h4>
-                                <div className="flex gap-2">
-                                    {["500m", "1km", "5km", "10km+"].map((dist) => (
-                                        <button
-                                            key={dist}
-                                            onClick={() => setSelectedDistance(dist)}
-                                            className={cn(
-                                                "flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-                                                selectedDistance === dist
-                                                    ? "bg-indigo-600 text-white"
-                                                    : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-neutral-700 hover:text-indigo-600"
-                                            )}
-                                        >
-                                            {dist}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Price Range */}
-                            <div className="mb-5">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300">Max Price</h4>
-                                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                                        {selectedPrice ? `Under $${selectedPrice}` : "Any"}
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    step="5"
-                                    value={selectedPrice || 0}
-                                    onChange={(e) => {
-                                        const val = parseInt(e.target.value);
-                                        setSelectedPrice(val === 0 ? null : val);
-                                    }}
-                                    className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                                <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-                                    <span>Any</span>
-                                    <span>$25</span>
-                                    <span>$50</span>
-                                    <span>$75</span>
-                                    <span>$100+</span>
-                                </div>
-                            </div>
-
-                            {/* Quick Toggles */}
-                            <div className="space-y-3">
-                                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Quick Filters</h4>
-
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">Has Loyalty Program</span>
-                                    <button
-                                        onClick={() => setHasLoyalty(!hasLoyalty)}
-                                        className={cn(
-                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                                            hasLoyalty ? "bg-indigo-600" : "bg-gray-200 dark:bg-neutral-700"
-                                        )}
-                                    >
-                                        <span
-                                            className={cn(
-                                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                                hasLoyalty ? "translate-x-6" : "translate-x-1"
-                                            )}
-                                        />
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">Accepts Bookings</span>
-                                    <button
-                                        onClick={() => setAcceptsBookings(!acceptsBookings)}
-                                        className={cn(
-                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                                            acceptsBookings ? "bg-indigo-600" : "bg-gray-200 dark:bg-neutral-700"
-                                        )}
-                                    >
-                                        <span
-                                            className={cn(
-                                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                                acceptsBookings ? "translate-x-6" : "translate-x-1"
-                                            )}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Apply Button */}
+            <main className="space-y-6 px-4 py-5">
+                {sections.map((section) => (
+                    <section key={section.title}>
+                        <div className="mb-3 flex items-center justify-between">
+                            <h2 className="text-[18px] font-bold text-[#1f2a2a] tracking-tight">{section.title}</h2>
                             <button
-                                onClick={() => setShowFilters(false)}
-                                className="mt-6 w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                                onClick={() => router.push("/consumer/map")}
+                                className="text-[14px] font-bold text-[#ff6b3d]"
                             >
-                                Apply Filters
+                                See all ›
                             </button>
                         </div>
-                    </div>
-                </>
-            )}
 
-
-
-            {/* Live Activity Strip */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 shadow-sm">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <span className="text-sm font-medium whitespace-nowrap">Right now near you:</span>
-                    {(() => {
-                        const categoryCounts = filteredSlots.reduce((acc, slot) => {
-                            const business = MOCK_BUSINESSES.find(b => b.id === slot.businessId);
-                            if (business) {
-                                acc[business.category] = (acc[business.category] || 0) + 1;
-                            }
-                            return acc;
-                        }, {} as Record<string, number>);
-
-                        if (Object.keys(categoryCounts).length === 0) {
-                            return <span className="text-sm text-white/80 italic">No live deals match your filters</span>;
-                        }
-
-                        return Object.entries(categoryCounts).map(([category, count]) => (
-                            <button
-                                key={category}
-                                onClick={() => {
-                                    const isSelected = preferences.categories.length === 1 && preferences.categories[0] === category;
-                                    setPreferences({ categories: isSelected ? [] : [category] });
-                                    setShowFilters(false);
-                                }}
-                                className="text-sm font-medium whitespace-nowrap bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors"
-                            >
-                                {count} {category.toLowerCase()}
-                            </button>
-                        ));
-                    })()}
-                </div>
-            </div>
-
-            <main className="px-4 py-6 space-y-6">
-
-                {/* Feed Toggle Chips */}
-                <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                    <button
-                        onClick={() => setFeedView("near")}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                            feedView === "near"
-                                ? "bg-indigo-600 text-white shadow-lg"
-                                : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-700"
-                        )}
-                    >
-                        <MapPin className="h-4 w-4" />
-                        Near You
-                    </button>
-                    <button
-                        onClick={() => setFeedView("trending")}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                            feedView === "trending"
-                                ? "bg-indigo-600 text-white shadow-lg"
-                                : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-700"
-                        )}
-                    >
-                        <TrendingUp className="h-4 w-4" />
-                        Trending
-                    </button>
-                    <button
-                        onClick={() => setFeedView("ending")}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                            feedView === "ending"
-                                ? "bg-indigo-600 text-white shadow-lg"
-                                : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-700"
-                        )}
-                    >
-                        <Zap className="h-4 w-4" />
-                        Ending Soon
-                    </button>
-                </div>
-
-                {/* Live Slots Section */}
-                {liveSlots.length > 0 && (
-                    <section>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                                {feedView === "near" && "Near You 📍"}
-                                {feedView === "trending" && "Trending Now 🔥"}
-                                {feedView === "ending" && "Ending Soon ⚡"}
-                            </h2>
-                        </div>
-                        <div className="flex space-x-4 overflow-x-auto pb-4 no-scrollbar">
-                            {liveSlots
-                                .sort((a, b) => {
-                                    // Sort based on feed view
-                                    if (feedView === "ending") {
-                                        return a.endsAt - b.endsAt; // Soonest first
-                                    } else if (feedView === "trending") {
-                                        // Mock trending: most claimed = most popular
-                                        return b.claimedCount - a.claimedCount;
-                                    }
-                                    // Default: nearest first (would need location data)
-                                    return 0;
-                                })
-                                .map((slot) => {
-                                    const business = MOCK_BUSINESSES.find((b) => b.id === slot.businessId);
+                        {section.items.length === 0 ? (
+                            <div className="rounded-3xl border border-dashed border-[#d6dfd8] bg-white px-4 py-8 text-center text-sm text-[#6f7b76]">
+                                No offers match your filters.
+                            </div>
+                        ) : (
+                            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                                {section.items.map((slot) => {
+                                    const business = businessById.get(slot.businessId);
                                     if (!business) return null;
 
-                                    const timeLeft = Math.max(0, slot.endsAt - Date.now());
-                                    const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-                                    const slotsLeft = slot.inventory - slot.claimedCount;
-
-                                    // Calculate distance and time
-                                    const userLoc = location || { lat: -31.9523, lng: 115.8613 }; // Default to Perth CBD
+                                    const slotsLeft = Math.max(slot.inventory - slot.claimedCount, 0);
                                     const distanceInfo = calculateDistanceAndTime(
                                         userLoc.lat,
                                         userLoc.lng,
@@ -555,130 +422,244 @@ export default function HomePage() {
                                         business.lng
                                     );
 
-                                    // Calculate savings
-                                    const savings = calculateSavings(slot.discountType, slot.value);
-
-                                    // Get category icon
-                                    const categoryIcon = getCategoryIcon(business.category);
-
-                                    // Get time remaining
-                                    const timeRemaining = getTimeRemaining(slot.endsAt);
-
                                     return (
-                                        <div key={`${slot.businessId}-${slot.id}`} className="min-w-[280px] flex flex-col rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-4 shadow-sm border border-indigo-100 dark:border-indigo-900/50">
-                                            {/* Category Icon Badge */}
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-2xl">{categoryIcon}</span>
-                                                    <div>
-                                                        <h3 className="font-bold text-gray-900 dark:text-white">{business.name}</h3>
-                                                        <p className="text-xs text-gray-600 dark:text-gray-400">{business.category}</p>
+                                        <article
+                                            key={`${section.title}-${slot.id}`}
+                                            className="w-[62vw] max-w-[250px] shrink-0 overflow-hidden rounded-2xl border border-[#dfe6df] bg-white shadow-[0_10px_30px_-18px_rgba(23,31,29,0.25)] transition-all hover:bg-[#f9fbf9] sm:w-[280px] sm:max-w-[280px]"
+                                        >
+                                            <div
+                                                className="relative h-28 cursor-pointer overflow-hidden sm:h-32"
+                                                onClick={() => router.push("/consumer/map")}
+                                            >
+                                                <img src={business.image} alt={business.name} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                                                <span className="absolute left-2.5 top-2.5 rounded-full bg-[#ffe1d8] px-2 py-0.5 text-[10px] font-black text-[#b93812] sm:text-xs">
+                                                    {slotsLeft} LEFT
+                                                </span>
+
+                                                <div className="absolute bottom-2.5 left-3 right-3">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="line-clamp-1 min-w-0 flex-1 text-base font-bold text-white tracking-tight">{business.name}</p>
+                                                        <button
+                                                            onClick={(event) => {
+                                                                event.preventDefault();
+                                                                event.stopPropagation();
+                                                                toggleFavourite(business.id);
+                                                            }}
+                                                            className={cn(
+                                                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
+                                                                isFavourite(business.id)
+                                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white"
+                                                                    : "border-white/50 bg-black/30 text-white backdrop-blur-md"
+                                                            )}
+                                                            aria-label={`Toggle favourite business ${business.name}`}
+                                                        >
+                                                            <Store className="h-4 w-4" />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                {/* Countdown Timer */}
-                                                <div className="flex items-center text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                                                    <Clock className="mr-1 h-3 w-3" />
-                                                    {timeRemaining}
-                                                </div>
                                             </div>
 
-                                            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">{slot.title}</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3">{slot.description}</p>
-
-                                            {/* Savings & Distance Row */}
-                                            <div className="flex items-center justify-between text-xs mb-3">
-                                                <div className="flex items-center text-green-600 font-bold bg-green-50 px-2 py-1 rounded">
-                                                    <Tag className="h-3 w-3 mr-1" />
-                                                    {savings}
+                                            <div className="space-y-1.5 px-3.5 pb-3.5 pt-3">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h3 className="line-clamp-1 min-w-0 flex-1 text-[15px] font-bold text-[#1f2a2a]">{slot.title || "Surprise Bag"}</h3>
+                                                    <button
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+                                                            toggleFavourite(slot.id);
+                                                        }}
+                                                        className={cn(
+                                                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
+                                                            isFavourite(slot.id)
+                                                                ? "border-[#ff6b3d]/40 bg-[#ff6b3d]/15 text-[#ff6b3d]"
+                                                                : "border-[#d6dfd8] bg-[#f4f7f4] text-[#8a9791]"
+                                                        )}
+                                                        aria-label={`Toggle favourite offer ${slot.title || "Surprise Bag"}`}
+                                                    >
+                                                        <Heart className={cn("h-4 w-4", isFavourite(slot.id) && "fill-current")} />
+                                                    </button>
                                                 </div>
-                                                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                                                    <MapPin className="h-3 w-3 mr-1" />
-                                                    {distanceInfo.displayText}
+
+                                                <div className="flex items-center justify-between pt-1">
+                                                    <div className="flex items-center gap-2 text-[11px] text-[#6f7b76]">
+                                                        <span className="inline-flex items-center gap-1 font-black text-[#ff6b3d]">
+                                                            <Star className="h-3 w-3 fill-current" />
+                                                            {business.rating.toFixed(1)}
+                                                        </span>
+                                                        <span className="text-[#d3dbd5]">|</span>
+                                                        <span className="font-medium">{formatKm(distanceInfo.distanceMeters / 1000)} km</span>
+                                                        <span className="inline-flex items-center gap-1 text-[#ff6b3d] font-bold">
+                                                            <Clock3 className="h-3 w-3" />
+                                                            {Math.max(1, Math.ceil((slot.endsAt - Date.now()) / (1000 * 60 * 60)))}h
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-end gap-1.5">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[11px] text-[#b8c2bc] line-through">${(slot.originalPrice || 11.99).toFixed(2)}</span>
+                                                            <span className="text-xl font-black leading-none text-[#1f2a2a] tracking-tighter">{getOfferPrice(slot)}</span>
+                                                        </div>
+                                                        <button
+                                                            onClick={(event) => handleClaimSlot(slot.id, event)}
+                                                            disabled={claiming === slot.id || slotsLeft === 0}
+                                                            className="rounded-lg bg-[#ff6b3d] px-4 py-1.5 text-[11px] font-black text-white transition-all hover:brightness-95 disabled:opacity-50 active:scale-95"
+                                                        >
+                                                            {claiming === slot.id ? "..." : "CLAIM"}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-3">
-                                                <div className="flex items-center">
-                                                    <Tag className="h-3 w-3 mr-1" />
-                                                    {slot.discountType === "percent" ? `${slot.value}% off` : `$${slot.value} off`}
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <Users className="h-3 w-3 mr-1" />
-                                                    {slotsLeft} {slotsLeft === 1 ? 'slot' : 'slots'} left
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-auto pt-4">
-                                                <button
-                                                    onClick={(e) => handleClaimSlot(slot.id, e)}
-                                                    disabled={claiming === slot.id || slotsLeft === 0}
-                                                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95 transition-all"
-                                                >
-                                                    {claiming === slot.id ? "Claiming..." : slotsLeft === 0 ? "Fully Booked" : "Claim Slot"}
-                                                </button>
-                                            </div>
-                                        </div>
+                                        </article>
                                     );
                                 })}
-                        </div>
+                            </div>
+                        )}
                     </section>
-                )}
-
-                {/* Suggestions / List */}
-                <section>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                        {preferences.liveDealsOnly ? "Live Deals Nearby" : "Suggestions for You"}
-                    </h2>
-                    <div className="space-y-4">
-                        {filteredBusinesses.map((business) => (
-                            <Link
-                                key={business.id}
-                                href="/consumer/map"
-                                className="flex bg-white dark:bg-neutral-900 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-neutral-800 hover:shadow-md transition-shadow cursor-pointer"
-                            >
-                                <div className="w-24 h-24 relative">
-                                    <img src={business.image} alt={business.name} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1 p-3">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="font-bold text-gray-900 dark:text-white">{business.name}</h3>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{business.category} • {business.address}</p>
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                toggleFavourite(business.id);
-                                            }}
-                                        >
-                                            <HeartIcon filled={isFavourite(business.id)} />
-                                        </button>
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between">
-                                        <div className="flex items-center text-xs text-yellow-500 font-bold">
-                                            <Star className="h-3 w-3 mr-1" />
-                                            {business.rating}
-                                        </div>
-                                        <div className="flex items-center text-xs text-gray-400">
-                                            <MapPin className="h-3 w-3 mr-1" />
-                                            0.8 km
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
+                ))}
             </main>
 
-            {/* Flying Ticket Animations */}
+            {showFilters && (
+                <>
+                    <div
+                        className="fixed inset-0 z-[10000] bg-black/25"
+                        onClick={() => setShowFilters(false)}
+                    />
+
+                    <div className="fixed inset-x-2 bottom-[72px] z-[10001] flex max-h-[68vh] flex-col overflow-hidden rounded-[2.5rem] border border-[#dfe6df] bg-[#f9fbf9] text-[#1f2a2a] shadow-2xl backdrop-blur-3xl sm:bottom-4 sm:top-20 sm:max-h-[calc(100vh-6rem)]">
+                        <div className="sticky top-0 border-b border-[#e1e8e2] bg-[#f9fbf9]/95 px-4 py-4 backdrop-blur-xl">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold tracking-tight text-[#1f2a2a]">Filters</h3>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={resetFilters}
+                                        className="text-xs font-bold uppercase tracking-widest text-[#ff6b3d] hover:opacity-80 transition-opacity"
+                                    >
+                                        Reset
+                                    </button>
+                                    <button
+                                        onClick={() => setShowFilters(false)}
+                                        className="rounded-xl bg-white p-2 text-[#1f2a2a] hover:bg-[#f0f5f1] transition-all border border-[#d6dfd8]"
+                                        aria-label="Close filters"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 space-y-7 overflow-y-auto px-5 py-6 no-scrollbar">
+                            <section>
+                                <h4 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Categories</h4>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {CATEGORIES.map((cat) => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => {
+                                                const current = preferences.categories;
+                                                const updated = current.includes(cat)
+                                                    ? current.filter((item) => item !== cat)
+                                                    : [...current, cat];
+                                                setPreferences({ categories: updated });
+                                            }}
+                                            className={cn(
+                                                "rounded-xl px-4 py-2 text-sm font-bold transition-all border",
+                                                preferences.categories.includes(cat)
+                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white shadow-[0_8px_18px_-10px_rgba(255,107,61,0.9)]"
+                                                    : "bg-white border-[#d6dfd8] text-[#4f5e58] hover:bg-[#f4f8f4]"
+                                            )}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section>
+                                <h4 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Distance</h4>
+                                <div className="grid grid-cols-4 gap-2.5">
+                                    {DISTANCE_OPTIONS.map((dist) => (
+                                        <button
+                                            key={dist}
+                                            onClick={() => setSelectedDistance(dist)}
+                                            className={cn(
+                                                "rounded-xl py-2.5 text-sm font-bold transition-all border",
+                                                selectedDistance === dist
+                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white shadow-[0_8px_18px_-10px_rgba(255,107,61,0.9)]"
+                                                    : "bg-white border-[#d6dfd8] text-[#4f5e58] hover:bg-[#f4f8f4]"
+                                            )}
+                                        >
+                                            {dist}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Max Price</h4>
+                                    <span className="text-sm font-bold text-[#ff6b3d]">
+                                        {selectedPrice ? `Under $${selectedPrice}` : "Any"}
+                                    </span>
+                                </div>
+                                <div className="relative px-2">
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        step="5"
+                                        value={selectedPrice || 0}
+                                        onChange={(event) => {
+                                            const value = Number.parseInt(event.target.value, 10);
+                                            setSelectedPrice(value === 0 ? null : value);
+                                        }}
+                                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#e0e7e1] accent-[#ff6b3d] transition-all"
+                                    />
+                                    <div className="mt-3 flex justify-between text-[10px] font-bold text-[#a8b3ac] uppercase tracking-tighter">
+                                        <span>$0</span>
+                                        <span>$25</span>
+                                        <span>$50</span>
+                                        <span>$75</span>
+                                        <span>$100+</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="space-y-4">
+                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Preferences</h4>
+
+                                <ToggleRow
+                                    label="Has Loyalty Program"
+                                    enabled={hasLoyalty}
+                                    onClick={() => setHasLoyalty((prev) => !prev)}
+                                />
+                                <ToggleRow
+                                    label="Accepts Bookings"
+                                    enabled={acceptsBookings}
+                                    onClick={() => setAcceptsBookings((prev) => !prev)}
+                                />
+                            </section>
+                        </div>
+
+                        <div className="border-t border-[#e1e8e2] bg-[#f9fbf9]/95 p-5 pb-safe backdrop-blur-xl">
+                            <button
+                                onClick={() => setShowFilters(false)}
+                                className="w-full rounded-2xl bg-[#ff6b3d] py-4 text-sm font-black text-white shadow-xl shadow-[#ff6b3d]/20 active:scale-[0.98] transition-all hover:brightness-95"
+                            >
+                                UPDATE RESULTS
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
             {flyingAnimations.map((animation) => (
                 <FlyingTicketAnimation
                     key={animation.id}
                     startPosition={animation.startPosition}
                     onComplete={() => {
-                        setFlyingAnimations(prev => prev.filter(a => a.id !== animation.id));
+                        setFlyingAnimations((prev) => prev.filter((item) => item.id !== animation.id));
                     }}
                 />
             ))}
@@ -686,6 +667,25 @@ export default function HomePage() {
     );
 }
 
-function HeartIcon({ filled }: { filled: boolean }) {
-    return <FavoriteStar initialFilled={filled} />;
+function ToggleRow({ label, enabled, onClick }: { label: string; enabled: boolean; onClick: () => void }) {
+    return (
+        <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-[#52615b]">{label}</span>
+            <button
+                onClick={onClick}
+                className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
+                    enabled ? "bg-[#ff6b3d]" : "bg-[#d6dfd8]"
+                )}
+                aria-label={label}
+            >
+                <span
+                    className={cn(
+                        "inline-block h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-300",
+                        enabled ? "translate-x-6" : "translate-x-1"
+                    )}
+                />
+            </button>
+        </div>
+    );
 }
