@@ -79,7 +79,7 @@ export const useConsumerStore = create<ConsumerState>()(
 
             appearance: {
                 theme: "system",
-                accentColor: "#6366f1",
+                accentColor: "#3744D2",
                 highContrast: false,
             },
             setAppearance: (appearance) =>

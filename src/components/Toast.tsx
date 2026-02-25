@@ -42,11 +42,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     <div
                         key={toast.id}
                         className={`pointer-events-auto flex items-center gap-3 p-4 rounded-xl shadow-lg border animate-in slide-in-from-bottom-5 fade-in duration-300 ${toast.type === "success"
-                            ? "bg-white border-green-100 text-gray-900"
+                            ? "bg-white border-[#3744D2]/20 text-gray-900"
                             : "bg-white border-red-100 text-gray-900"
                             }`}
                     >
-                        <div className={`p-1 rounded-full ${toast.type === "success" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                        <div className={`p-1 rounded-full ${toast.type === "success" ? "bg-[#3744D2]/10 text-[#3744D2]" : "bg-red-100 text-red-600"}`}>
                             {toast.type === "success" ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                         </div>
                         <p className="flex-1 font-medium text-sm">{toast.message}</p>

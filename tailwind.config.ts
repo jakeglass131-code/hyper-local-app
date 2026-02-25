@@ -12,13 +12,13 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         brand: {
-          DEFAULT: "#ff6b3d", // Vibrant Orange
-          light: "#ff906d",
-          dark: "#e55a2d",
+          DEFAULT: "#3744D2",
+          light: "#7181FF",
+          dark: "#2B36A8",
         },
         accent: {
-          DEFAULT: "#1f6d68", // Deep Green
-          dark: "#164f4b",
+          DEFAULT: "#7181FF",
+          dark: "#3744D2",
         }
 
       },

@@ -105,7 +105,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
                         <button
                             onClick={startScanner}
-                            className="bg-indigo-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-transform hover:scale-105 flex items-center gap-2"
+                            className="bg-[#3744D2] text-white px-6 py-3 rounded-full font-bold shadow-lg hover:brightness-110 transition-transform hover:scale-105 flex items-center gap-2"
                         >
                             <Camera className="w-5 h-5" />
                             Start Camera
@@ -129,7 +129,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
                 {/* Overlay Guide */}
                 {isScanning && (
                     <div className="absolute inset-0 pointer-events-none border-2 border-white/30 rounded-lg">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-indigo-500 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-[#3744D2] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
                     </div>
                 )}
             </div>

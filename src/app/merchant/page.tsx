@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function MerchantPage() {
-    redirect("/business");
+    redirect("/provider/home");
 }

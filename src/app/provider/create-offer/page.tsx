@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { ArrowLeft, ArrowRight, Check, Upload, Calendar } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Calendar, Check, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const userId = "provider_123"; // TODO: Get from auth
-const businessId = "biz_123"; // TODO: Get from profile
+const userId = "provider_123";
+const businessId = "biz_123";
 
 type OfferData = {
     title: string;
@@ -29,9 +29,8 @@ export default function CreateOfferPage() {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Default dates: Start today, End 7 days from now
-    const today = new Date().toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     const [offerData, setOfferData] = useState<OfferData>({
         title: "",
@@ -41,26 +40,24 @@ export default function CreateOfferPage() {
         value: 10,
         startsAt: today,
         endsAt: nextWeek,
-        radiusMeters: 5000,
-        inventory: 10,
+        radiusMeters: 2000,
+        inventory: 25,
         targetDemographics: [],
         notificationEnabled: false,
         imageUrl: "",
     });
 
-    const updateData = (updates: Partial<OfferData>) => {
-        setOfferData({ ...offerData, ...updates });
-    };
+    const totalSteps = 5;
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                updateData({ imageUrl: reader.result as string });
-            };
-            reader.readAsDataURL(file);
-        }
+    const updateData = (updates: Partial<OfferData>) => setOfferData((prev) => ({ ...prev, ...updates }));
+
+    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => updateData({ imageUrl: reader.result as string });
+        reader.readAsDataURL(file);
     };
 
     const handleSubmit = async () => {
@@ -84,279 +81,341 @@ export default function CreateOfferPage() {
                 return;
             }
 
-            alert("Offer created successfully!");
+            alert("Offer created successfully");
             router.push("/provider/home");
-        } catch (e) {
+        } catch (error) {
+            console.error(error);
             alert("Network error");
         } finally {
             setLoading(false);
         }
     };
 
-    const totalSteps = 5;
-
     return (
-        <div className="pb-24 px-4 py-6">
-            <header className="mb-6">
+        <div className="min-h-screen pb-28 pt-6">
+            <header className="mb-5">
                 <button
                     onClick={() => (step > 1 ? setStep(step - 1) : router.back())}
-                    className="flex items-center text-indigo-400 mb-4"
+                    className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#3744D2]"
                 >
-                    <ArrowLeft className="h-5 w-5 mr-2" />
+                    <ArrowLeft className="h-4 w-4" />
                     Back
                 </button>
-                <h1 className="text-2xl font-bold">Create Offer</h1>
-                <p className="text-sm text-white/60 mt-1">
-                    Step {step} of {totalSteps}
-                </p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Campaign Builder</p>
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Create Offer</h1>
+                <p className="mt-1 text-sm text-slate-600">Step {step} of {totalSteps}</p>
             </header>
 
-            {/* Progress bar */}
             <div className="mb-6 flex gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                    <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full ${i < step ? "bg-indigo-500" : "bg-white/10"
-                            }`}
-                    />
+                {Array.from({ length: totalSteps }).map((_, index) => (
+                    <div key={index} className="h-1.5 flex-1 rounded-full bg-slate-200">
+                        <div
+                            className="h-1.5 rounded-full bg-[#3744D2] transition-all"
+                            style={{ width: `${index < step ? 100 : 0}%` }}
+                        />
+                    </div>
                 ))}
             </div>
 
-            {/* Step 1: Basic Details */}
-            {step === 1 && (
-                <div className="space-y-4">
-                    {/* Image Upload */}
-                    <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-40 rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center bg-neutral-900/50 cursor-pointer hover:bg-neutral-900 transition-colors overflow-hidden relative"
-                    >
-                        {offerData.imageUrl ? (
-                            <img src={offerData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                            <>
-                                <Upload className="h-8 w-8 text-white/40 mb-2" />
-                                <span className="text-sm text-white/60">Tap to upload image</span>
-                            </>
-                        )}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageUpload}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm text-white/70">Offer Title</label>
-                        <input
-                            value={offerData.title}
-                            onChange={(e) => updateData({ title: e.target.value })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                            placeholder="e.g. 50% Off Coffee"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm text-white/70">Description</label>
-                        <textarea
-                            value={offerData.description}
-                            onChange={(e) => updateData({ description: e.target.value })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                            rows={3}
-                            placeholder="Describe your offer..."
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm text-white/70">Product Type</label>
-                        <select
-                            value={offerData.productType}
-                            onChange={(e) => updateData({ productType: e.target.value })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                {step === 1 && (
+                    <div className="space-y-4">
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className="relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50"
                         >
-                            <option value="food">Food & Beverage</option>
-                            <option value="retail">Retail</option>
-                            <option value="service">Service</option>
-                            <option value="entertainment">Entertainment</option>
-                        </select>
-                    </div>
-                </div>
-            )}
+                            {offerData.imageUrl ? (
+                                <img src={offerData.imageUrl} alt="Offer preview" className="h-full w-full object-cover" />
+                            ) : (
+                                <div className="text-center">
+                                    <Upload className="mx-auto h-8 w-8 text-slate-400" />
+                                    <p className="mt-2 text-sm font-semibold text-slate-600">Upload visual</p>
+                                </div>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
+                        </div>
 
-            {/* Step 2: Discount Details */}
-            {step === 2 && (
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm text-white/70">Discount Type</label>
-                        <div className="mt-2 grid grid-cols-3 gap-2">
-                            {(["percent", "fixed", "bundle"] as const).map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => updateData({ discountType: type })}
-                                    className={`rounded-2xl px-4 py-3 text-sm font-medium border ${offerData.discountType === type
-                                        ? "bg-indigo-500 border-indigo-500"
-                                        : "bg-neutral-900 border-white/10"
+                        <InputField
+                            label="Offer title"
+                            value={offerData.title}
+                            onChange={(value) => updateData({ title: value })}
+                            placeholder="e.g. 25% off lunch bowls"
+                        />
+                        <TextAreaField
+                            label="Description"
+                            value={offerData.description}
+                            onChange={(value) => updateData({ description: value })}
+                            placeholder="Clear value proposition and urgency"
+                        />
+                        <SelectField
+                            label="Category"
+                            value={offerData.productType}
+                            onChange={(value) => updateData({ productType: value })}
+                            options={[
+                                { value: "food", label: "Food & Beverage" },
+                                { value: "retail", label: "Retail" },
+                                { value: "service", label: "Service" },
+                                { value: "entertainment", label: "Entertainment" },
+                            ]}
+                        />
+                    </div>
+                )}
+
+                {step === 2 && (
+                    <div className="space-y-4">
+                        <div>
+                            <p className="mb-2 text-sm font-semibold text-slate-700">Discount type</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {(["percent", "fixed", "bundle"] as const).map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={() => updateData({ discountType: type })}
+                                        className={`rounded-xl border px-3 py-2 text-sm font-semibold capitalize ${
+                                            offerData.discountType === type
+                                                ? "border-[#3744D2] bg-[#3744D2]/10 text-[#3744D2]"
+                                                : "border-slate-200 bg-white text-slate-600"
                                         }`}
-                                >
-                                    {type === "percent" ? "%" : type === "fixed" ? "$" : "Bundle"}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-sm text-white/70">
-                            {offerData.discountType === "percent" ? "Percentage" : "Amount"}
-                        </label>
-                        <input
-                            type="number"
-                            value={offerData.value}
-                            onChange={(e) => updateData({ value: Number(e.target.value) })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm text-white/70">Inventory (slots)</label>
-                        <input
-                            type="number"
-                            value={offerData.inventory}
-                            onChange={(e) => updateData({ inventory: Number(e.target.value) })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Step 3: Duration & Radius */}
-            {step === 3 && (
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm text-white/70">Start Date</label>
-                            <div className="relative mt-2">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                                <input
-                                    type="date"
-                                    value={offerData.startsAt}
-                                    onChange={(e) => updateData({ startsAt: e.target.value })}
-                                    className="w-full rounded-2xl bg-neutral-900 border border-white/10 pl-10 pr-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                />
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <div>
-                            <label className="text-sm text-white/70">End Date</label>
-                            <div className="relative mt-2">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                                <input
-                                    type="date"
-                                    value={offerData.endsAt}
-                                    onChange={(e) => updateData({ endsAt: e.target.value })}
-                                    className="w-full rounded-2xl bg-neutral-900 border border-white/10 pl-10 pr-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label className="text-sm text-white/70">Location Radius (meters)</label>
-                        <input
+                        <InputField
+                            label={offerData.discountType === "percent" ? "Discount %" : "Discount amount"}
+                            value={String(offerData.value)}
+                            onChange={(value) => updateData({ value: Number(value) })}
+                            placeholder="10"
                             type="number"
-                            value={offerData.radiusMeters}
-                            onChange={(e) => updateData({ radiusMeters: Number(e.target.value) })}
-                            className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
                         />
-                        <p className="text-xs text-white/40 mt-2">
-                            {(offerData.radiusMeters / 1000).toFixed(1)} km radius
-                        </p>
+                        <InputField
+                            label="Inventory (available redemptions)"
+                            value={String(offerData.inventory)}
+                            onChange={(value) => updateData({ inventory: Number(value) })}
+                            placeholder="25"
+                            type="number"
+                        />
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Step 4: Targeting */}
-            {step === 4 && (
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm text-white/70">Target Demographics</label>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {["students", "families", "professionals", "seniors"].map((demo) => (
+                {step === 3 && (
+                    <div className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <DateField
+                                label="Start date"
+                                value={offerData.startsAt}
+                                onChange={(value) => updateData({ startsAt: value })}
+                            />
+                            <DateField
+                                label="End date"
+                                value={offerData.endsAt}
+                                onChange={(value) => updateData({ endsAt: value })}
+                            />
+                        </div>
+
+                        <InputField
+                            label="Radius (meters)"
+                            value={String(offerData.radiusMeters)}
+                            onChange={(value) => updateData({ radiusMeters: Number(value) })}
+                            placeholder="2000"
+                            type="number"
+                        />
+                        <p className="text-xs text-slate-500">Current coverage: {(offerData.radiusMeters / 1000).toFixed(1)} km</p>
+                    </div>
+                )}
+
+                {step === 4 && (
+                    <div className="space-y-4">
+                        <p className="text-sm font-semibold text-slate-700">Target demographics</p>
+                        <div className="flex flex-wrap gap-2">
+                            {["students", "families", "professionals", "seniors"].map((segment) => (
                                 <button
-                                    key={demo}
+                                    key={segment}
                                     onClick={() => {
                                         const current = offerData.targetDemographics;
-                                        updateData({
-                                            targetDemographics: current.includes(demo)
-                                                ? current.filter((d) => d !== demo)
-                                                : [...current, demo],
-                                        });
+                                        const updated = current.includes(segment)
+                                            ? current.filter((item) => item !== segment)
+                                            : [...current, segment];
+                                        updateData({ targetDemographics: updated });
                                     }}
-                                    className={`rounded-full px-4 py-2 text-sm ${offerData.targetDemographics.includes(demo)
-                                        ? "bg-indigo-500"
-                                        : "bg-neutral-900 border border-white/10"
-                                        }`}
+                                    className={`rounded-full border px-3 py-1.5 text-sm font-semibold capitalize ${
+                                        offerData.targetDemographics.includes(segment)
+                                            ? "border-[#3744D2] bg-[#3744D2] text-white"
+                                            : "border-slate-200 bg-white text-slate-600"
+                                    }`}
                                 >
-                                    {demo}
+                                    {segment}
                                 </button>
                             ))}
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Step 5: Review */}
-            {step === 5 && (
-                <div className="space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-neutral-900/50 p-4">
-                        <h3 className="font-semibold mb-4">Review Your Offer</h3>
-                        {offerData.imageUrl && (
-                            <div className="mb-4 h-32 w-full rounded-xl overflow-hidden">
-                                <img src={offerData.imageUrl} alt="Offer" className="w-full h-full object-cover" />
-                            </div>
-                        )}
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-white/60">Title:</span>
-                                <span>{offerData.title}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-white/60">Discount:</span>
-                                <span>
-                                    {offerData.discountType === "percent"
-                                        ? `${offerData.value}%`
-                                        : `$${offerData.value}`}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-white/60">Valid:</span>
-                                <span>{offerData.startsAt} to {offerData.endsAt}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-white/60">Inventory:</span>
-                                <span>{offerData.inventory} slots</span>
+                {step === 5 && (
+                    <div className="space-y-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                            <h2 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Review</h2>
+                            <div className="mt-3 space-y-2 text-sm text-slate-700">
+                                <Row label="Title" value={offerData.title || "-"} />
+                                <Row
+                                    label="Discount"
+                                    value={
+                                        offerData.discountType === "percent"
+                                            ? `${offerData.value}%`
+                                            : `$${offerData.value}`
+                                    }
+                                />
+                                <Row label="Duration" value={`${offerData.startsAt} to ${offerData.endsAt}`} />
+                                <Row label="Inventory" value={`${offerData.inventory}`} />
+                                <Row label="Radius" value={`${offerData.radiusMeters}m`} />
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </section>
 
-            {/* Navigation */}
-            <div className="mt-6 flex gap-3">
+            <div className="mt-5 flex gap-3">
                 {step < totalSteps ? (
                     <button
-                        onClick={() => setStep(step + 1)}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3"
+                        onClick={() => setStep((prev) => prev + 1)}
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20"
                     >
                         Next
-                        <ArrowRight className="h-5 w-5" />
+                        <ArrowRight className="h-4 w-4" />
                     </button>
                 ) : (
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-green-500 hover:bg-green-400 text-white font-medium py-3 disabled:opacity-50"
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20 disabled:opacity-45"
                     >
                         {loading ? "Creating..." : "Publish Offer"}
-                        <Check className="h-5 w-5" />
+                        <Check className="h-4 w-4" />
                     </button>
                 )}
             </div>
+        </div>
+    );
+}
+
+function InputField({
+    label,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    type?: string;
+}) {
+    return (
+        <label className="block">
+            <span className="text-sm font-semibold text-slate-700">{label}</span>
+            <input
+                type={type}
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder={placeholder}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+            />
+        </label>
+    );
+}
+
+function TextAreaField({
+    label,
+    value,
+    onChange,
+    placeholder,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+}) {
+    return (
+        <label className="block">
+            <span className="text-sm font-semibold text-slate-700">{label}</span>
+            <textarea
+                rows={3}
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder={placeholder}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+            />
+        </label>
+    );
+}
+
+function SelectField({
+    label,
+    value,
+    onChange,
+    options,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: { value: string; label: string }[];
+}) {
+    return (
+        <label className="block">
+            <span className="text-sm font-semibold text-slate-700">{label}</span>
+            <select
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+            >
+                {options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+        </label>
+    );
+}
+
+function DateField({
+    label,
+    value,
+    onChange,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    return (
+        <label className="block">
+            <span className="text-sm font-semibold text-slate-700">{label}</span>
+            <div className="relative mt-1">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                    type="date"
+                    value={value}
+                    onChange={(event) => onChange(event.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                />
+            </div>
+        </label>
+    );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+            <span className="text-slate-500">{label}</span>
+            <span className="font-semibold text-slate-900">{value}</span>
         </div>
     );
 }

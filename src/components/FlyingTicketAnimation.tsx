@@ -83,7 +83,7 @@ export function FlyingTicketAnimation({ startPosition, onComplete }: FlyingIconP
                 opacity,
             }}
         >
-            <div className="rounded-full border-2 border-white bg-[#ff6b3d] p-4 text-white shadow-[0_0_20px_rgba(255,107,61,0.5)]">
+            <div className="rounded-full border-2 border-white bg-[#3744D2] p-4 text-white shadow-[0_0_20px_rgba(55,68,210,0.45)]">
                 <Ticket className="h-8 w-8" />
             </div>
         </div>

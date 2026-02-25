@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, ArrowRight } from "lucide-react";
 
-const userId = "provider_123"; // TODO: Get from auth
+const userId = "provider_123";
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -21,13 +20,12 @@ export default function OnboardingPage() {
     });
 
     const updateData = (updates: Partial<typeof formData>) => {
-        setFormData({ ...formData, ...updates });
+        setFormData((prev) => ({ ...prev, ...updates }));
     };
 
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            // Create profile
             const res = await fetch("/api/merchant/profile", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -39,9 +37,6 @@ export default function OnboardingPage() {
                 return;
             }
 
-            const profile = await res.json();
-
-            // Mark onboarding complete
             await fetch("/api/merchant/profile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -49,7 +44,8 @@ export default function OnboardingPage() {
             });
 
             router.push("/provider/home");
-        } catch (e) {
+        } catch (error) {
+            console.error(error);
             alert("Network error");
         } finally {
             setLoading(false);
@@ -57,141 +53,148 @@ export default function OnboardingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white px-4 py-6">
-            {/* Step 1: Welcome */}
-            {step === 1 && (
-                <div className="max-w-md mx-auto text-center py-12">
-                    <h1 className="text-3xl font-bold mb-4">Welcome to Hyper Local</h1>
-                    <p className="text-white/60 mb-8">
-                        Let's set up your business profile to start creating offers
-                    </p>
-                    <button
-                        onClick={() => setStep(2)}
-                        className="w-full rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3"
-                    >
-                        Get Started
-                    </button>
-                </div>
-            )}
+        <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 px-4 py-8">
+            <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Provider Onboarding</p>
 
-            {/* Step 2: Business Details */}
-            {step === 2 && (
-                <div className="max-w-md mx-auto">
-                    <h2 className="text-2xl font-bold mb-6">Business Details</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-sm text-white/70">Business Name</label>
-                            <input
-                                value={formData.businessName}
-                                onChange={(e) => updateData({ businessName: e.target.value })}
-                                className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                placeholder="e.g. Jake's Ice Cream"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-sm text-white/70">Category</label>
+                {step === 1 && (
+                    <div className="pt-3">
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Set up your business profile</h1>
+                        <p className="mt-2 text-sm text-slate-600">This takes about 2 minutes and unlocks campaign tools.</p>
+                        <button
+                            onClick={() => setStep(2)}
+                            className="mt-6 w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white"
+                        >
+                            Get started
+                        </button>
+                    </div>
+                )}
+
+                {step === 2 && (
+                    <div className="space-y-4 pt-3">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Business details</h2>
+                        <Input
+                            label="Business name"
+                            value={formData.businessName}
+                            onChange={(value) => updateData({ businessName: value })}
+                            placeholder="e.g. Main Street Coffee"
+                        />
+                        <label className="block">
+                            <span className="text-sm font-semibold text-slate-700">Category</span>
                             <select
                                 value={formData.businessCategory}
-                                onChange={(e) => updateData({ businessCategory: e.target.value })}
-                                className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+                                onChange={(event) => updateData({ businessCategory: event.target.value })}
+                                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
                             >
                                 <option value="food">Food & Beverage</option>
                                 <option value="retail">Retail</option>
                                 <option value="service">Service</option>
                                 <option value="entertainment">Entertainment</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="text-sm text-white/70">Address</label>
-                            <input
-                                value={formData.businessAddress}
-                                onChange={(e) => updateData({ businessAddress: e.target.value })}
-                                className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                placeholder="123 Main St, City"
-                            />
-                        </div>
+                        </label>
+                        <Input
+                            label="Address"
+                            value={formData.businessAddress}
+                            onChange={(value) => updateData({ businessAddress: value })}
+                            placeholder="Street, suburb, city"
+                        />
                         <button
                             onClick={() => setStep(3)}
                             disabled={!formData.businessName || !formData.businessAddress}
-                            className="w-full rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3 disabled:opacity-50"
+                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
                         >
                             Next
                         </button>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Step 3: Contact */}
-            {step === 3 && (
-                <div className="max-w-md mx-auto">
-                    <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-sm text-white/70">Email</label>
-                            <input
-                                type="email"
-                                value={formData.contactEmail}
-                                onChange={(e) => updateData({ contactEmail: e.target.value })}
-                                className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                placeholder="business@example.com"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-sm text-white/70">Phone (optional)</label>
-                            <input
-                                type="tel"
-                                value={formData.contactPhone}
-                                onChange={(e) => updateData({ contactPhone: e.target.value })}
-                                className="mt-2 w-full rounded-2xl bg-neutral-900 border border-white/10 px-4 py-3 text-sm outline-none focus:border-indigo-500"
-                                placeholder="+1 (555) 123-4567"
-                            />
-                        </div>
+                {step === 3 && (
+                    <div className="space-y-4 pt-3">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Contact details</h2>
+                        <Input
+                            label="Email"
+                            value={formData.contactEmail}
+                            onChange={(value) => updateData({ contactEmail: value })}
+                            placeholder="business@email.com"
+                            type="email"
+                        />
+                        <Input
+                            label="Phone (optional)"
+                            value={formData.contactPhone}
+                            onChange={(value) => updateData({ contactPhone: value })}
+                            placeholder="+1 ..."
+                        />
                         <button
                             onClick={() => setStep(4)}
                             disabled={!formData.contactEmail}
-                            className="w-full rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3 disabled:opacity-50"
+                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
                         >
                             Next
                         </button>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Step 4: Subscription */}
-            {step === 4 && (
-                <div className="max-w-md mx-auto">
-                    <h2 className="text-2xl font-bold mb-6">Choose Your Plan</h2>
-                    <div className="space-y-4 mb-6">
+                {step === 4 && (
+                    <div className="space-y-4 pt-3">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Choose plan</h2>
                         {[
-                            { tier: "free" as const, name: "Free", price: "$0", offers: "1 offer/day" },
-                            { tier: "basic" as const, name: "Basic", price: "$9/mo", offers: "5 offers/day" },
-                            { tier: "premium" as const, name: "Premium", price: "$29/mo", offers: "Unlimited" },
+                            { tier: "free" as const, name: "Free", price: "$0", detail: "1 campaign/day" },
+                            { tier: "basic" as const, name: "Basic", price: "$9/mo", detail: "5 campaigns/day" },
+                            { tier: "premium" as const, name: "Premium", price: "$29/mo", detail: "Unlimited campaigns" },
                         ].map((plan) => (
                             <button
                                 key={plan.tier}
                                 onClick={() => updateData({ subscriptionTier: plan.tier })}
-                                className={`w-full rounded-2xl border p-4 text-left ${formData.subscriptionTier === plan.tier
-                                        ? "border-indigo-500 bg-indigo-500/10"
-                                        : "border-white/10 bg-neutral-900"
-                                    }`}
+                                className={`w-full rounded-xl border p-4 text-left ${
+                                    formData.subscriptionTier === plan.tier
+                                        ? "border-[#3744D2] bg-[#3744D2]/5"
+                                        : "border-slate-200 bg-white"
+                                }`}
                             >
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="font-semibold">{plan.name}</div>
-                                    <div className="text-lg font-bold">{plan.price}</div>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-bold text-slate-900">{plan.name}</p>
+                                    <p className="text-sm font-bold text-slate-700">{plan.price}</p>
                                 </div>
-                                <div className="text-sm text-white/60">{plan.offers}</div>
+                                <p className="mt-1 text-sm text-slate-600">{plan.detail}</p>
                             </button>
                         ))}
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
+                        >
+                            {loading ? "Setting up..." : "Complete setup"}
+                        </button>
                     </div>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="w-full rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3 disabled:opacity-50"
-                    >
-                        {loading ? "Setting up..." : "Complete Setup"}
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
+    );
+}
+
+function Input({
+    label,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    type?: string;
+}) {
+    return (
+        <label className="block">
+            <span className="text-sm font-semibold text-slate-700">{label}</span>
+            <input
+                type={type}
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder={placeholder}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+            />
+        </label>
     );
 }

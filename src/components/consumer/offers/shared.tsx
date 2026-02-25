@@ -69,7 +69,7 @@ export function OffersHeader({ title, subtitle }: HeaderProps) {
 
       <div className="space-y-4 px-4 pb-4">
         <div>
-          <p className="inline-flex items-center gap-1 rounded-full bg-[#e8f4ef] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#1f6d68]">
+          <p className="inline-flex items-center gap-1 rounded-full bg-[#eef1ff] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#3744D2]">
             <Sparkles className="h-3 w-3" />
             My Offers Hub
           </p>
@@ -88,7 +88,7 @@ export function OffersHeader({ title, subtitle }: HeaderProps) {
                 className={cn(
                   "inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors",
                   isActive
-                    ? "border-[#d4e6de] bg-[#eaf4ef] text-[#1f6d68]"
+                    ? "border-[#d7dcff] bg-[#eef1ff] text-[#3744D2]"
                     : "border-[#dde3dd] bg-white text-[#61706a] hover:bg-[#f9fbf9]"
                 )}
               >
@@ -116,14 +116,14 @@ export function EmptyStateCard({
 }) {
   return (
     <section className="rounded-2xl border border-dashed border-[#d0d7d1] bg-white p-8 text-center shadow-sm">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f4ef]">
-        <Ticket className="h-7 w-7 text-[#1f6d68]" />
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#eef1ff]">
+        <Ticket className="h-7 w-7 text-[#3744D2]" />
       </div>
       <h2 className="text-lg font-semibold text-[#1f2937]">{title}</h2>
       <p className="mx-auto mt-2 max-w-sm text-sm text-[#6b7280]">{body}</p>
       <button
         onClick={onClick}
-        className="mt-5 rounded-xl bg-[#1f6d68] px-5 py-2.5 text-sm font-semibold text-white"
+        className="mt-5 rounded-xl bg-[#3744D2] px-5 py-2.5 text-sm font-semibold text-white"
       >
         {ctaLabel}
       </button>

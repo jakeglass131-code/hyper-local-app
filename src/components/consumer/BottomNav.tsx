@@ -33,7 +33,7 @@ export function BottomNav() {
                         >
                             {/* Active indicator bar */}
                             {isActive && (
-                                <div className="absolute top-0 left-2 right-2 h-1 rounded-b-full bg-brand shadow-[0_2px_10px_rgba(255,107,61,0.3)] animate-in slide-in-from-top-1 duration-300" />
+                                <div className="absolute top-0 left-2 right-2 h-1 rounded-b-full bg-brand shadow-[0_2px_10px_rgba(55,68,210,0.35)] animate-in slide-in-from-top-1 duration-300" />
                             )}
 
                             {tab.icon && (

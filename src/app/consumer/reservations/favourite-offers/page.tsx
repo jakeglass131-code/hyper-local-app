@@ -36,7 +36,7 @@ export default function FavouriteOffersPage() {
 
       <main className="space-y-4 px-4 py-5">
         <ScrollReveal className="grid grid-cols-1 gap-3 sm:grid-cols-3" variant="pop">
-          <MetricCard label="Saved offers" value={favOffers.length} tone="text-[#1f6d68]" />
+          <MetricCard label="Saved offers" value={favOffers.length} tone="text-[#3744D2]" />
           <MetricCard label="Expiring in 24h" value={expiringSoon} tone="text-[#dc2626]" />
           <MetricCard label="Ready to redeem" value={Math.max(0, favOffers.length - expiringSoon)} tone="text-[#3744d2]" />
         </ScrollReveal>
@@ -131,7 +131,7 @@ export default function FavouriteOffersPage() {
                         </button>
                         <button
                           onClick={() => router.push("/consumer/reservations")}
-                          className="rounded-lg bg-[#1f6d68] px-3 py-1.5 text-xs font-semibold text-white"
+                          className="rounded-lg bg-[#3744D2] px-3 py-1.5 text-xs font-semibold text-white"
                         >
                           Go to redeem
                         </button>

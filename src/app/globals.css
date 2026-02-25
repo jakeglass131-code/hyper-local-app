@@ -10,14 +10,10 @@
 
 :root {
   /* Brand Theme */
-  --accent: #7C3AED;
-  /* Electric Violet */
-  --accent-hover: #6D28D9;
-  /* Violet-700 */
-  --accent-light: #A78BFA;
-  /* Violet-400 */
-  --brand-accent: #BEF264;
-  /* Luminous Lime */
+  --accent: #3744D2;
+  --accent-hover: #2B36A8;
+  --accent-light: #7181FF;
+  --brand-accent: #3744D2;
 
   --bg: #ffffff;
   --bg-secondary: #f9fafb;

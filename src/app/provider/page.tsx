@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ProviderPage() {
-    redirect("/business");
+    redirect("/provider/home");
 }

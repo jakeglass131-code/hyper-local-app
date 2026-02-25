@@ -36,7 +36,7 @@ export default function FavouriteBusinessesPage() {
 
       <main className="space-y-4 px-4 py-5">
         <ScrollReveal className="grid grid-cols-1 gap-3 sm:grid-cols-3" variant="pop">
-          <MetricCard label="Saved businesses" value={favBusinesses.length} tone="text-[#1f6d68]" />
+          <MetricCard label="Saved businesses" value={favBusinesses.length} tone="text-[#3744D2]" />
           <MetricCard label="With live deals" value={businessesWithDeals} tone="text-[#3744d2]" />
           <MetricCard label="To revisit" value={Math.max(0, favBusinesses.length - businessesWithDeals)} tone="text-[#9a5800]" />
         </ScrollReveal>
@@ -115,7 +115,7 @@ export default function FavouriteBusinessesPage() {
                           <MapPin className="h-3 w-3" />
                           {business.address}
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf3ef] px-2 py-0.5 font-semibold text-[#1f6d68]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#eef1ff] px-2 py-0.5 font-semibold text-[#3744D2]">
                           <Ticket className="h-3 w-3" />
                           {activeDealCount} live {activeDealCount === 1 ? "deal" : "deals"}
                         </span>
@@ -124,7 +124,7 @@ export default function FavouriteBusinessesPage() {
                       <div className="mt-4 flex gap-2">
                         <button
                           onClick={() => router.push("/consumer/map")}
-                          className="rounded-lg bg-[#1f6d68] px-3 py-1.5 text-xs font-semibold text-white"
+                          className="rounded-lg bg-[#3744D2] px-3 py-1.5 text-xs font-semibold text-white"
                         >
                           View on map
                         </button>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Edit, Pause, Play, Trash2, Eye, Users, Clock } from "lucide-react";
-import { Offer, Business } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { Clock, Eye, Pause, Play, Trash2, Users, X } from "lucide-react";
+import { Business, Offer } from "@/lib/store";
 
 interface CurrentOffersModalProps {
     onClose: () => void;
@@ -27,8 +27,8 @@ export function CurrentOffersModal({ onClose }: CurrentOffersModalProps) {
             const businessesData = await businessesRes.json();
             setOffers(offersData);
             setBusinesses(businessesData);
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -41,18 +41,18 @@ export function CurrentOffersModal({ onClose }: CurrentOffersModalProps) {
                 body: JSON.stringify({ isActive: !currentStatus }),
             });
             fetchData();
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
         }
     };
 
     const deleteOffer = async (offerId: string) => {
-        if (!confirm("Are you sure you want to delete this offer?")) return;
+        if (!confirm("Delete this offer?")) return;
         try {
             await fetch(`/api/offers/${offerId}`, { method: "DELETE" });
             fetchData();
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -63,120 +63,110 @@ export function CurrentOffersModal({ onClose }: CurrentOffersModalProps) {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         if (days > 0) return `${days}d ${hours}h left`;
-        return `${hours}h left`;
+        return `${Math.max(hours, 1)}h left`;
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-neutral-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/10 shadow-2xl flex flex-col">
-                <div className="bg-neutral-900 border-b border-white/10 p-6 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+            <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
                     <div>
-                        <h2 className="text-2xl font-bold">Current Offers</h2>
-                        <p className="text-sm text-white/60 mt-1">
-                            {offers.filter((o) => o.isActive).length} active offers
+                        <h2 className="text-lg font-black text-slate-900">Live Offers</h2>
+                        <p className="mt-1 text-sm text-slate-600">
+                            {offers.filter((offer) => offer.isActive).length} active campaigns
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                     >
-                        <X className="h-6 w-6" />
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-                    {loading ? (
-                        <div className="text-center py-12 text-white/60">Loading...</div>
-                    ) : offers.length === 0 ? (
-                        <div className="text-center py-12">
-                            <div className="text-white/40 mb-2">No offers yet</div>
-                            <p className="text-sm text-white/60">
-                                Create your first offer to get started
-                            </p>
+                <div className="flex-1 overflow-y-auto p-5">
+                    {loading && <div className="py-12 text-center text-sm text-slate-500">Loading offers...</div>}
+
+                    {!loading && offers.length === 0 && (
+                        <div className="py-12 text-center">
+                            <p className="text-sm font-semibold text-slate-900">No offers found</p>
+                            <p className="mt-1 text-sm text-slate-500">Create your first campaign to begin tracking performance.</p>
                         </div>
-                    ) : (
+                    )}
+
+                    {!loading && offers.length > 0 && (
                         <div className="grid gap-4">
                             {offers.map((offer) => {
-                                const business = businesses.find((b) => b.id === offer.businessId);
-                                const progress = (offer.claimedCount / offer.inventory) * 100;
+                                const business = businesses.find((item) => item.id === offer.businessId);
+                                const progress = (offer.claimedCount / Math.max(offer.inventory, 1)) * 100;
 
                                 return (
-                                    <div
-                                        key={offer.id}
-                                        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="text-lg font-bold">{offer.title}</h3>
+                                    <article key={offer.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="mb-1 flex items-center gap-2">
+                                                    <h3 className="truncate text-base font-bold text-slate-900">{offer.title}</h3>
                                                     <span
-                                                        className={`px-2 py-0.5 text-xs rounded-full ${offer.isActive
-                                                                ? "bg-green-500/20 text-green-400"
-                                                                : "bg-gray-500/20 text-gray-400"
-                                                            }`}
+                                                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                                                            offer.isActive
+                                                                ? "bg-emerald-100 text-emerald-700"
+                                                                : "bg-slate-200 text-slate-600"
+                                                        }`}
                                                     >
                                                         {offer.isActive ? "Active" : "Paused"}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-white/60">{business?.name}</p>
-                                                <p className="text-sm text-white/80 mt-2">{offer.description}</p>
+                                                <p className="text-sm text-slate-600">{business?.name ?? "Unassigned business"}</p>
+                                                <p className="mt-1 text-sm text-slate-700">{offer.description}</p>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => toggleOfferStatus(offer.id, offer.isActive)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                    className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 hover:border-[#3744D2]/35 hover:text-[#3744D2]"
                                                     title={offer.isActive ? "Pause" : "Activate"}
                                                 >
-                                                    {offer.isActive ? (
-                                                        <Pause className="h-5 w-5" />
-                                                    ) : (
-                                                        <Play className="h-5 w-5" />
-                                                    )}
+                                                    {offer.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                                                 </button>
                                                 <button
                                                     onClick={() => deleteOffer(offer.id)}
-                                                    className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                                                    className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-rose-600 hover:bg-rose-100"
                                                     title="Delete"
                                                 >
-                                                    <Trash2 className="h-5 w-5" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-3 gap-4 mb-4">
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Eye className="h-4 w-4 text-white/40" />
-                                                <span className="text-white/60">
-                                                    {offer.claimedCount} views
-                                                </span>
+                                        <div className="mb-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
+                                            <div className="inline-flex items-center gap-1.5">
+                                                <Eye className="h-4 w-4" />
+                                                {offer.claimedCount} views
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Users className="h-4 w-4 text-white/40" />
-                                                <span className="text-white/60">
-                                                    {offer.redemptionCount} claims
-                                                </span>
+                                            <div className="inline-flex items-center gap-1.5">
+                                                <Users className="h-4 w-4" />
+                                                {offer.redemptionCount} claims
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Clock className="h-4 w-4 text-white/40" />
-                                                <span className="text-white/60">{getTimeLeft(offer.endsAt)}</span>
+                                            <div className="inline-flex items-center gap-1.5">
+                                                <Clock className="h-4 w-4" />
+                                                {getTimeLeft(offer.endsAt)}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <div className="flex justify-between text-xs text-white/60 mb-1">
-                                                <span>Inventory</span>
+                                            <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-500">
+                                                <span>Inventory usage</span>
                                                 <span>
                                                     {offer.claimedCount}/{offer.inventory}
                                                 </span>
                                             </div>
-                                            <div className="w-full bg-white/10 rounded-full h-2">
+                                            <div className="h-2 rounded-full bg-slate-200">
                                                 <div
-                                                    className="bg-indigo-500 h-2 rounded-full transition-all"
+                                                    className="h-2 rounded-full bg-[#3744D2]"
                                                     style={{ width: `${Math.min(progress, 100)}%` }}
                                                 />
                                             </div>
                                         </div>
-                                    </div>
+                                    </article>
                                 );
                             })}
                         </div>

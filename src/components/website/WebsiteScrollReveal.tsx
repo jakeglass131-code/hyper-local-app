@@ -61,3 +61,5 @@ export function WebsiteScrollReveal({
     </div>
   );
 }
+
+export default WebsiteScrollReveal;

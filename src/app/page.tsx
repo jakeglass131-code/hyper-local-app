@@ -12,7 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { WebsiteShell } from "@/components/website/WebsiteShell";
-import { WebsiteScrollReveal } from "@/components/website/WebsiteScrollReveal";
+import WebsiteScrollReveal from "@/components/website/WebsiteScrollReveal";
 
 const consumerStats = [
   { value: "Live", label: "Real-time map discovery" },
@@ -62,17 +62,17 @@ export default function WebsiteHome() {
     <WebsiteShell>
       <WebsiteScrollReveal>
         <section className="relative overflow-hidden rounded-[2.5rem] border border-[#dbe3db] bg-gradient-to-br from-[#f0f9ff] via-white to-[#fff7ed] p-8 sm:p-16">
-          <div className="website-orb-slow absolute -right-24 -top-20 h-72 w-72 rounded-full bg-[#1f6d68]/10 blur-[100px]" />
+          <div className="website-orb-slow absolute -right-24 -top-20 h-72 w-72 rounded-full bg-[#3744D2]/10 blur-[100px]" />
           <div className="website-orb-fast absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-[#ff7a59]/10 blur-[100px]" />
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#d6e4dc] bg-white/90 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[#1f6d68] mb-6 shadow-sm">
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#d6e4dc] bg-white/90 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[#3744D2] mb-6 shadow-sm">
               <Sparkles className="h-3.5 w-3.5" />
               Revolutionizing Local Discovery
             </p>
             <h1 className="text-5xl font-black leading-[0.9] tracking-tighter text-[#1f2a2a] sm:text-7xl">
               Your neighborhood, <br />
-              <span className="text-[#1f6d68]">re-discovered.</span>
+              <span className="text-[#3744D2]">re-discovered.</span>
             </h1>
             <p className="mt-8 max-w-2xl mx-auto text-lg text-[#4f5f59] font-medium leading-relaxed">
               Find the best deals, hidden gems, and local favorites within a 5-minute walk.
@@ -82,7 +82,7 @@ export default function WebsiteHome() {
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center gap-3 rounded-2xl bg-[#1f6d68] px-8 py-4 text-lg font-bold text-white shadow-2xl shadow-[#1f6d68]/30 transition-transform hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-3 rounded-2xl bg-[#3744D2] px-8 py-4 text-lg font-bold text-white shadow-2xl shadow-[#3744D2]/30 transition-transform hover:scale-105 active:scale-95"
               >
                 <Download className="h-5 w-5" />
                 Download App
@@ -102,8 +102,8 @@ export default function WebsiteHome() {
       <WebsiteScrollReveal delayMs={100} className="mt-12" variant="pop">
         <section className="grid gap-6 md:grid-cols-4">
           {consumerStats.map((item) => (
-            <div key={item.label} className="rounded-3xl border border-[#dfe5df] bg-white p-6 shadow-sm group hover:border-[#1f6d68]/30 transition-colors">
-              <p className="text-3xl font-black tracking-tight text-[#1f2a2a] group-hover:text-[#1f6d68] transition-colors">{item.value}</p>
+            <div key={item.label} className="rounded-3xl border border-[#dfe5df] bg-white p-6 shadow-sm group hover:border-[#3744D2]/30 transition-colors">
+              <p className="text-3xl font-black tracking-tight text-[#1f2a2a] group-hover:text-[#3744D2] transition-colors">{item.value}</p>
               <p className="mt-1 text-sm font-bold text-[#5f6d68] uppercase tracking-wider">{item.label}</p>
             </div>
           ))}
@@ -118,9 +118,9 @@ export default function WebsiteHome() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {features.map((item, i) => (
+            {features.map((item) => (
               <article key={item.title} className="rounded-[2rem] border border-[#e4e8e4] bg-[#fbfcfb] p-8 hover:bg-white hover:shadow-xl transition-all">
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1f6d68]/10 text-[#1f6d68]">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#3744D2]/10 text-[#3744D2]">
                   {item.icon}
                 </div>
                 <h3 className="text-xl font-black text-[#1f2a2a]">{item.title}</h3>
@@ -136,13 +136,13 @@ export default function WebsiteHome() {
           <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
             <Heart className="h-64 w-64 rotate-12" />
           </div>
-          <h2 className="text-4xl font-black tracking-tight text-[#1f2a2a] mb-12">How it works in <span className="text-blue-600">3 simple steps.</span></h2>
+          <h2 className="text-4xl font-black tracking-tight text-[#1f2a2a] mb-12">How it works in <span className="text-[#3744D2]">3 simple steps.</span></h2>
           <div className="grid gap-12 md:grid-cols-3 relative z-10">
             {steps.map((item, i) => (
               <div key={item.title} className="relative">
-                <p className="text-[8rem] font-black text-blue-500/5 absolute -top-20 -left-4 leading-none select-none">0{i + 1}</p>
+                <p className="text-[8rem] font-black text-[#3744D2]/5 absolute -top-20 -left-4 leading-none select-none">0{i + 1}</p>
                 <div className="relative">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#3744D2]/10 text-[#3744D2]">
                     {item.icon}
                   </div>
                   <h3 className="text-xl font-black text-[#1f2a2a]">{item.title}</h3>
@@ -156,7 +156,7 @@ export default function WebsiteHome() {
 
       <WebsiteScrollReveal delayMs={400} className="my-12">
         <section className="relative overflow-hidden rounded-[3rem] border border-[#dfe5df] bg-[#1f2a2a] p-12 text-white sm:p-20 text-center">
-          <div className="absolute right-0 top-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#1f6d68]/20 blur-[100px]" />
+          <div className="absolute right-0 top-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#3744D2]/20 blur-[100px]" />
           <div className="absolute left-0 bottom-0 h-96 w-96 translate-y-1/2 -translate-x-1/2 rounded-full bg-[#ff7a59]/10 blur-[100px]" />
 
           <div className="relative z-10 max-w-2xl mx-auto">
@@ -164,7 +164,7 @@ export default function WebsiteHome() {
               Start exploring <br />your city today.
             </h2>
             <p className="text-lg text-white/70 mb-10 font-medium">
-              Join thousands of locals getting more out of their neighborhood. Download the app and see what's happening nearby.
+              Join thousands of locals getting more out of their neighborhood. Download the app and see what&apos;s happening nearby.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link

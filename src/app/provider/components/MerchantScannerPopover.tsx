@@ -6,42 +6,37 @@ export function MerchantScannerPopover() {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-neutral-900/50 p-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <div className="text-sm font-semibold">Merchant Scanner</div>
-                    <div className="text-xs text-white/60 truncate">
-                        Give stamps, redeem rewards, redeem offers — open scanner anytime.
+                    <div className="text-sm font-semibold text-slate-900">Merchant Scanner</div>
+                    <div className="truncate text-xs text-slate-600">
+                        Redeem offers and issue stamps from one scanner flow.
                     </div>
                 </div>
 
                 <button
                     onClick={() => setOpen(true)}
-                    className="shrink-0 rounded-xl bg-indigo-500 px-3 py-2 text-sm font-medium hover:bg-indigo-400"
+                    className="shrink-0 rounded-xl bg-[#3744D2] px-3 py-2 text-sm font-semibold text-white"
                 >
                     Open scanner
                 </button>
             </div>
 
             {open && (
-                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm">
-                    <div className="mx-auto mt-8 w-[95vw] max-w-4xl rounded-3xl border border-white/10 bg-neutral-950 shadow-2xl overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                            <div className="text-sm font-semibold">Scanner</div>
+                <div className="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-sm">
+                    <div className="mx-auto mt-8 w-[95vw] max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                            <div className="text-sm font-semibold text-slate-900">Scanner</div>
                             <button
                                 onClick={() => setOpen(false)}
-                                className="rounded-lg px-3 py-1 text-sm hover:bg-white/10"
+                                className="rounded-lg border border-slate-200 px-3 py-1 text-sm text-slate-600 hover:bg-slate-100"
                             >
                                 Close
                             </button>
                         </div>
 
-                        {/* Embed your existing scanner page */}
-                        <iframe
-                            src="/merchant"
-                            className="h-[75vh] w-full bg-white"
-                            title="Merchant Scanner"
-                        />
+                        <iframe src="/provider/scanner" className="h-[75vh] w-full bg-white" title="Merchant Scanner" />
                     </div>
                 </div>
             )}

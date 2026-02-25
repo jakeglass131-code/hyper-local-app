@@ -55,6 +55,10 @@ function getOfferPrice(slot: Offer): string {
     return `$${(base / 2).toFixed(2)}`;
 }
 
+function getOriginalOfferPrice(slot: Offer): string {
+    return `$${(slot.originalPrice ?? 11.99).toFixed(2)}`;
+}
+
 export default function HomePage() {
     const router = useRouter();
 
@@ -308,8 +312,8 @@ export default function HomePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f6f8f5] pb-28 text-[#1f2a2a]">
-            <header className="sticky top-0 z-20 border-b border-[#dfe6df] bg-[#f6f8f5]/95 px-5 pb-5 pt-4 backdrop-blur-xl">
+        <div className="min-h-screen bg-white pb-28 text-[#1f2120]">
+            <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/95 px-5 pb-5 pt-4 backdrop-blur-xl">
                 <div className="mb-7 flex items-center">
                     <input
                         ref={logoInputRef}
@@ -325,11 +329,11 @@ export default function HomePage() {
                     >
                         {logoPreview ? (
                             <span
-                                className="h-6 w-6 rounded-md border border-[#ff6b3d]/40 bg-cover bg-center"
+                                className="h-6 w-6 rounded-md border border-[#3744D2]/40 bg-cover bg-center"
                                 style={{ backgroundImage: `url(${logoPreview})` }}
                             />
                         ) : (
-                            <Upload className="h-4 w-4 text-[#ff6b3d]" />
+                            <Upload className="h-4 w-4 text-brand" />
                         )}
                         <span className="text-sm font-bold tracking-tight">
                             {logoPreview ? "Sync Brand" : "Setup Brand"}
@@ -339,12 +343,12 @@ export default function HomePage() {
 
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <button className="flex items-center gap-1 text-[22px] font-bold text-[#1f2a2a]">
-                            <MapPin className="h-5 w-5 text-[#ff6b3d]" />
+                        <button className="flex items-center gap-1 text-[22px] font-black text-[#1f2120]">
+                            <MapPin className="h-5 w-5 text-brand" />
                             {locationLabel}
                             <ChevronDown className="h-4 w-4 text-[#8a9791]" />
                         </button>
-                        <p className="text-[14px] font-medium text-[#6f7b76]">{getHeaderRadius(selectedDistance)}</p>
+                        <p className="text-[14px] font-bold text-[#6f7b76]">{getHeaderRadius(selectedDistance)}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -353,10 +357,10 @@ export default function HomePage() {
                             className="relative overflow-hidden rounded-xl border border-[#d6dfd8] bg-white px-3 py-2 text-[#1f2a2a] shadow-sm active:scale-95 transition-all"
                             aria-label="Open filters"
                         >
-                            <div className="absolute inset-0 bg-[#ff6b3d]/10 opacity-0 hover:opacity-100 transition-opacity" />
-                            <SlidersHorizontal className="h-4 w-4 relative z-10" />
+                            <div className="absolute inset-0 bg-brand/5 opacity-0 hover:opacity-100 transition-opacity" />
+                            <SlidersHorizontal className="h-4 w-4 relative z-10 text-brand" />
                             {activeFilterCount > 0 && (
-                                <span className="absolute -right-1 -top-1 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-[#ff6b3d] text-[10px] font-bold text-white">
+                                <span className="absolute -right-1 -top-1 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
                                     {activeFilterCount}
                                 </span>
                             )}
@@ -367,8 +371,8 @@ export default function HomePage() {
                             className="relative group rounded-xl border border-[#d6dfd8] bg-white px-3.5 py-2.5 text-[#1f2a2a] shadow-sm active:scale-95 transition-all overflow-hidden"
                             aria-label="Profile"
                         >
-                            <div className="absolute inset-0 bg-[#ff6b3d]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <User className="h-5 w-5 text-[#ff6b3d] relative z-10" />
+                            <div className="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <User className="h-5 w-5 text-brand relative z-10" />
                         </button>
 
                     </div>
@@ -386,7 +390,7 @@ export default function HomePage() {
                                 setPreferences({ categories: [] });
                             }
                         }}
-                        className="h-14 w-full rounded-2xl border border-[#d6dfd8] bg-white pl-12 pr-4 text-[16px] text-[#1f2a2a] outline-none placeholder:text-[#8a9791] focus:ring-2 focus:ring-[#ff6b3d]/25 transition-all font-medium"
+                        className="h-14 w-full rounded-2xl border border-gray-200 bg-white pl-12 pr-4 text-[16px] text-[#1f2a2a] outline-none placeholder:text-[#8a9791] focus:ring-2 focus:ring-brand/10 transition-all font-medium"
                     />
                 </div>
             </header>
@@ -395,10 +399,10 @@ export default function HomePage() {
                 {sections.map((section) => (
                     <section key={section.title}>
                         <div className="mb-3 flex items-center justify-between">
-                            <h2 className="text-[18px] font-bold text-[#1f2a2a] tracking-tight">{section.title}</h2>
+                            <h2 className="text-[18px] font-black text-[#1f2a2a] tracking-tight">{section.title}</h2>
                             <button
                                 onClick={() => router.push("/consumer/map")}
-                                className="text-[14px] font-bold text-[#ff6b3d]"
+                                className="text-[14px] font-bold text-brand"
                             >
                                 See all ›
                             </button>
@@ -431,10 +435,10 @@ export default function HomePage() {
                                                 className="relative h-28 cursor-pointer overflow-hidden sm:h-32"
                                                 onClick={() => router.push("/consumer/map")}
                                             >
-                                                <img src={business.image} alt={business.name} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                <img src={business.image} alt={business.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                                                <span className="absolute left-2.5 top-2.5 rounded-full bg-[#ffe1d8] px-2 py-0.5 text-[10px] font-black text-[#b93812] sm:text-xs">
+                                                <span className="absolute left-2.5 top-2.5 rounded-full bg-[#fdf8e6] px-2.5 py-1 text-[10px] font-black text-[#8c6001] sm:text-xs shadow-sm">
                                                     {slotsLeft} LEFT
                                                 </span>
 
@@ -450,8 +454,8 @@ export default function HomePage() {
                                                             className={cn(
                                                                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
                                                                 isFavourite(business.id)
-                                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white"
-                                                                    : "border-white/50 bg-black/30 text-white backdrop-blur-md"
+                                                                    ? "border-brand bg-brand text-white"
+                                                                    : "border-white/50 bg-black/20 text-white backdrop-blur-md"
                                                             )}
                                                             aria-label={`Toggle favourite business ${business.name}`}
                                                         >
@@ -473,8 +477,8 @@ export default function HomePage() {
                                                         className={cn(
                                                             "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
                                                             isFavourite(slot.id)
-                                                                ? "border-[#ff6b3d]/40 bg-[#ff6b3d]/15 text-[#ff6b3d]"
-                                                                : "border-[#d6dfd8] bg-[#f4f7f4] text-[#8a9791]"
+                                                                ? "border-brand/40 bg-brand/10 text-brand"
+                                                                : "border-gray-100 bg-gray-50 text-[#8a9791]"
                                                         )}
                                                         aria-label={`Toggle favourite offer ${slot.title || "Surprise Bag"}`}
                                                     >
@@ -484,27 +488,23 @@ export default function HomePage() {
 
                                                 <div className="flex items-center justify-between pt-1">
                                                     <div className="flex items-center gap-2 text-[11px] text-[#6f7b76]">
-                                                        <span className="inline-flex items-center gap-1 font-black text-[#ff6b3d]">
+                                                        <span className="inline-flex items-center gap-1 font-black text-brand">
                                                             <Star className="h-3 w-3 fill-current" />
                                                             {business.rating.toFixed(1)}
                                                         </span>
                                                         <span className="text-[#d3dbd5]">|</span>
                                                         <span className="font-medium">{formatKm(distanceInfo.distanceMeters / 1000)} km</span>
-                                                        <span className="inline-flex items-center gap-1 text-[#ff6b3d] font-bold">
-                                                            <Clock3 className="h-3 w-3" />
-                                                            {Math.max(1, Math.ceil((slot.endsAt - Date.now()) / (1000 * 60 * 60)))}h
-                                                        </span>
                                                     </div>
 
                                                     <div className="flex flex-col items-end gap-1.5">
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[11px] text-[#b8c2bc] line-through">${(slot.originalPrice || 11.99).toFixed(2)}</span>
-                                                            <span className="text-xl font-black leading-none text-[#1f2a2a] tracking-tighter">{getOfferPrice(slot)}</span>
+                                                            <span className="text-xs font-bold text-[#8a9791] line-through">{getOriginalOfferPrice(slot)}</span>
+                                                            <span className="text-xl font-black leading-none text-brand tracking-tighter">{getOfferPrice(slot)}</span>
                                                         </div>
                                                         <button
                                                             onClick={(event) => handleClaimSlot(slot.id, event)}
                                                             disabled={claiming === slot.id || slotsLeft === 0}
-                                                            className="rounded-lg bg-[#ff6b3d] px-4 py-1.5 text-[11px] font-black text-white transition-all hover:brightness-95 disabled:opacity-50 active:scale-95"
+                                                            className="rounded-lg bg-brand px-4 py-1.5 text-[11px] font-black text-white transition-all hover:brightness-95 disabled:opacity-50 active:scale-95 shadow-sm"
                                                         >
                                                             {claiming === slot.id ? "..." : "CLAIM"}
                                                         </button>
@@ -534,7 +534,7 @@ export default function HomePage() {
                                 <div className="flex items-center gap-4">
                                     <button
                                         onClick={resetFilters}
-                                        className="text-xs font-bold uppercase tracking-widest text-[#ff6b3d] hover:opacity-80 transition-opacity"
+                                        className="text-xs font-bold uppercase tracking-widest text-brand hover:opacity-80 transition-opacity"
                                     >
                                         Reset
                                     </button>
@@ -566,8 +566,8 @@ export default function HomePage() {
                                             className={cn(
                                                 "rounded-xl px-4 py-2 text-sm font-bold transition-all border",
                                                 preferences.categories.includes(cat)
-                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white shadow-[0_8px_18px_-10px_rgba(255,107,61,0.9)]"
-                                                    : "bg-white border-[#d6dfd8] text-[#4f5e58] hover:bg-[#f4f8f4]"
+                                                    ? "border-brand bg-brand text-white shadow-lg shadow-brand/20"
+                                                    : "bg-white border-gray-200 text-[#4f5e58] hover:bg-gray-50"
                                             )}
                                         >
                                             {cat}
@@ -586,8 +586,8 @@ export default function HomePage() {
                                             className={cn(
                                                 "rounded-xl py-2.5 text-sm font-bold transition-all border",
                                                 selectedDistance === dist
-                                                    ? "border-[#ff6b3d] bg-[#ff6b3d] text-white shadow-[0_8px_18px_-10px_rgba(255,107,61,0.9)]"
-                                                    : "bg-white border-[#d6dfd8] text-[#4f5e58] hover:bg-[#f4f8f4]"
+                                                    ? "border-brand bg-brand text-white shadow-lg shadow-brand/20"
+                                                    : "bg-white border-gray-200 text-[#4f5e58] hover:bg-gray-50"
                                             )}
                                         >
                                             {dist}
@@ -599,7 +599,7 @@ export default function HomePage() {
                             <section>
                                 <div className="mb-4 flex items-center justify-between">
                                     <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Max Price</h4>
-                                    <span className="text-sm font-bold text-[#ff6b3d]">
+                                    <span className="text-sm font-bold text-brand">
                                         {selectedPrice ? `Under $${selectedPrice}` : "Any"}
                                     </span>
                                 </div>
@@ -614,7 +614,7 @@ export default function HomePage() {
                                             const value = Number.parseInt(event.target.value, 10);
                                             setSelectedPrice(value === 0 ? null : value);
                                         }}
-                                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#e0e7e1] accent-[#ff6b3d] transition-all"
+                                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-brand transition-all"
                                     />
                                     <div className="mt-3 flex justify-between text-[10px] font-bold text-[#a8b3ac] uppercase tracking-tighter">
                                         <span>$0</span>
@@ -645,7 +645,7 @@ export default function HomePage() {
                         <div className="border-t border-[#e1e8e2] bg-[#f9fbf9]/95 p-5 pb-safe backdrop-blur-xl">
                             <button
                                 onClick={() => setShowFilters(false)}
-                                className="w-full rounded-2xl bg-[#ff6b3d] py-4 text-sm font-black text-white shadow-xl shadow-[#ff6b3d]/20 active:scale-[0.98] transition-all hover:brightness-95"
+                                className="w-full rounded-2xl bg-brand py-4 text-sm font-black text-white shadow-xl shadow-brand/20 active:scale-[0.98] transition-all hover:brightness-95"
                             >
                                 UPDATE RESULTS
                             </button>
@@ -675,7 +675,7 @@ function ToggleRow({ label, enabled, onClick }: { label: string; enabled: boolea
                 onClick={onClick}
                 className={cn(
                     "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
-                    enabled ? "bg-[#ff6b3d]" : "bg-[#d6dfd8]"
+                    enabled ? "bg-brand" : "bg-gray-200"
                 )}
                 aria-label={label}
             >

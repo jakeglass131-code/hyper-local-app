@@ -21,6 +21,7 @@ type ActiveOffer = {
   isActive: boolean;
   value: number;
   discountType: "percent" | "fixed";
+  originalPrice?: number;
   title: string;
   description: string;
   inventory: number;
@@ -78,6 +79,21 @@ function getCategoryGlyph(category: string) {
   };
 
   return glyphs[category] ?? "•";
+}
+
+function getOriginalOfferPrice(offer: ActiveOffer): number {
+  return offer.originalPrice ?? 11.99;
+}
+
+function getDiscountedOfferPrice(offer: ActiveOffer): number {
+  const base = getOriginalOfferPrice(offer);
+  if (offer.discountType === "percent") {
+    return base * (1 - offer.value / 100);
+  }
+  if (offer.discountType === "fixed") {
+    return Math.max(base - offer.value, 1);
+  }
+  return base / 2;
 }
 
 function createBusinessMarkerElement(
@@ -184,7 +200,7 @@ function createUserMarkerElement() {
 
   const ripple = document.createElement("div");
   ripple.className = "absolute inset-0 rounded-full animate-ping";
-  ripple.style.backgroundColor = "#4F46E5";
+  ripple.style.backgroundColor = "#3744D2";
   ripple.style.opacity = "0.3";
   container.appendChild(ripple);
 
@@ -192,7 +208,7 @@ function createUserMarkerElement() {
   marker.style.width = "14px";
   marker.style.height = "14px";
   marker.style.borderRadius = "999px";
-  marker.style.background = "#4F46E5";
+  marker.style.background = "#3744D2";
   marker.style.border = "2.5px solid #ffffff";
   marker.style.boxShadow = "0 0 20px rgba(79,70,229,0.5)";
   marker.style.position = "relative";
@@ -316,12 +332,12 @@ export default function MapComponent() {
       if (!discount) return "#9CA3AF";
 
       if (discount.type === "percent") {
-        if (discount.value >= 50) return "#10B981";
-        if (discount.value >= 20) return "#F59E0B";
-        return "#EAB308";
+        if (discount.value >= 50) return "#3744D2";
+        if (discount.value >= 20) return "#5C68FF";
+        return "#9AA3FF";
       }
 
-      return "#F59E0B";
+      return "#5C68FF";
     },
     [getBestDiscount]
   );
@@ -505,7 +521,7 @@ export default function MapComponent() {
         data-reservations-button
       >
         <div className="relative">
-          <Ticket className="h-6 w-6 text-indigo-600" />
+          <Ticket className="h-6 w-6 text-brand" />
           {cart?.length > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
               {cart.length}
@@ -518,10 +534,10 @@ export default function MapComponent() {
         onClick={() => setShowFilters(!showFilters)}
         className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-md hover:bg-white text-gray-800 px-4 py-3 rounded-full shadow-xl border border-white/50 transition-all hover:scale-105 flex items-center gap-2"
       >
-        <SlidersHorizontal className="h-5 w-5 text-indigo-600" />
+        <SlidersHorizontal className="h-5 w-5 text-brand" />
         <span className="text-sm font-semibold">Filters</span>
         {(filters.categories.length > 0 || filters.discountTier !== "all") && (
-          <span className="bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="bg-brand text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
             {filters.categories.length + (filters.discountTier !== "all" ? 1 : 0)}
           </span>
         )}
@@ -534,7 +550,7 @@ export default function MapComponent() {
       <button
         onClick={moveToCurrentLocation}
         disabled={locating}
-        className="absolute top-20 right-4 z-[1000] bg-white/90 backdrop-blur-md hover:bg-white text-indigo-600 p-3.5 rounded-full shadow-xl border border-white/50 disabled:opacity-50 transition-all hover:scale-105"
+        className="absolute top-20 right-4 z-[1000] bg-white/90 backdrop-blur-md hover:bg-white text-brand p-3.5 rounded-full shadow-xl border border-white/50 disabled:opacity-50 transition-all hover:scale-105"
         title="My Location"
       >
         <Navigation className={cn("h-5 w-5", locating && "animate-spin")} />
@@ -551,7 +567,7 @@ export default function MapComponent() {
             className={cn(
               "p-2.5 rounded-xl transition-all text-xs font-medium",
               mapStyle === style.value
-                ? "bg-indigo-600 text-white shadow-md"
+                ? "bg-brand text-white shadow-md"
                 : "text-gray-600 hover:bg-gray-100"
             )}
             title={style.label}
@@ -602,12 +618,12 @@ export default function MapComponent() {
                   className={cn(
                     "flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                     filters.categories.includes(category)
-                      ? "bg-indigo-50 text-indigo-700"
+                      ? "bg-[#3744D2]/10 text-brand"
                       : "hover:bg-gray-50 text-gray-700"
                   )}
                 >
                   {filters.categories.includes(category) ? (
-                    <div className="w-4 h-4 rounded border border-indigo-600 bg-indigo-600 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded border border-brand bg-brand flex items-center justify-center">
                       <X className="h-3 w-3 text-white" />
                     </div>
                   ) : (
@@ -622,9 +638,9 @@ export default function MapComponent() {
           <div className="space-y-3 mb-6">
             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Discount</h4>
             {[
-              { id: "50+", label: "50% off or more", color: "bg-green-500" },
-              { id: "20-49", label: "20% - 49% off", color: "bg-orange-500" },
-              { id: "under20", label: "Under 20% off", color: "bg-yellow-500" },
+              { id: "50+", label: "50% off or more", color: "bg-[#3744D2]" },
+              { id: "20-49", label: "20% - 49% off", color: "bg-[#5C68FF]" },
+              { id: "under20", label: "Under 20% off", color: "bg-[#9AA3FF]" },
             ].map((tier) => (
               <button
                 key={tier.id}
@@ -683,7 +699,7 @@ export default function MapComponent() {
                 openNow: false,
               })
             }
-            className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+            className="mt-2 text-xs font-semibold text-brand hover:text-brand-dark"
           >
             Reset filters
           </button>
@@ -743,7 +759,7 @@ export default function MapComponent() {
 
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                <span className="w-2 h-2 bg-brand rounded-full"></span>
                 Active Offers
               </h4>
               {businessesWithOffers.has(selectedBusiness.id) ? (
@@ -751,10 +767,10 @@ export default function MapComponent() {
                   {getBusinessOffers(selectedBusiness.id).map((offer) => (
                     <div
                       key={offer.id}
-                      className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-white border border-brand/20 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="inline-block px-2 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg">
+                        <span className="inline-block px-2 py-1 bg-[#3744D2]/10 text-brand text-xs font-bold rounded-lg">
                           {offer.discountType === "percent" ? `${offer.value}% OFF` : `$${offer.value} OFF`}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -763,7 +779,15 @@ export default function MapComponent() {
                       </div>
 
                       <h5 className="font-bold text-gray-900 mb-1">{offer.title}</h5>
-                      <p className="text-sm text-gray-600 mb-3">{offer.description}</p>
+                      <p className="text-sm text-gray-600 mb-2">{offer.description}</p>
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-400 line-through">
+                          ${getOriginalOfferPrice(offer).toFixed(2)}
+                        </span>
+                        <span className="text-lg font-black text-brand">
+                          ${getDiscountedOfferPrice(offer).toFixed(2)}
+                        </span>
+                      </div>
 
                       <div className="flex gap-2">
                         <button
@@ -779,7 +803,7 @@ export default function MapComponent() {
                             ]);
                             addToCart(offer);
                           }}
-                          className="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                          className="flex-1 bg-brand text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-dark transition-colors flex items-center justify-center gap-2 shadow-sm"
                         >
                           <Ticket className="h-4 w-4" />
                           Reserve Now

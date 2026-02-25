@@ -1,85 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Delete } from "lucide-react";
+import { Delete, Lock } from "lucide-react";
 
-interface PinLockProps {
-    onUnlock: () => void;
-    correctPin?: string; // Optional, if we want to validate against a specific PIN
-}
-
-export function PinLock({ onUnlock, correctPin = "1234" }: PinLockProps) {
+export function PinLock({ onUnlock }: { onUnlock: () => void }) {
     const [pin, setPin] = useState("");
-    const [error, setError] = useState(false);
 
     const handlePress = (num: string) => {
-        if (pin.length < 4) {
-            const newPin = pin + num;
-            setPin(newPin);
-            setError(false);
+        if (pin.length >= 4) return;
 
-            if (newPin.length === 4) {
-                if (newPin === correctPin) {
-                    onUnlock();
-                } else {
-                    setError(true);
-                    setTimeout(() => setPin(""), 500);
-                }
-            }
+        const newPin = pin + num;
+        setPin(newPin);
+
+        if (newPin.length === 4) {
+            // Temporarily allowing any 4 digits to unlock
+            setTimeout(() => {
+                onUnlock();
+            }, 100);
         }
     };
 
-    const handleDelete = () => {
-        setPin(pin.slice(0, -1));
-        setError(false);
-    };
-
     return (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
-            <div className="mb-8 flex flex-col items-center">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${error ? "bg-red-500/20 text-red-500" : "bg-white/10 text-white"}`}>
-                    <Lock className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-white via-slate-50 to-slate-100 p-6">
+            <div className="mb-10 text-center">
+                <div className="mx-auto mb-4 inline-flex h-20 w-20 items-center justify-center rounded-3xl border border-slate-200 bg-white text-[#3744D2]">
+                    <Lock className="h-9 w-9" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">Enter PIN</h2>
-                <p className="text-white/60 text-sm">Please enter your 4-digit security PIN</p>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">Secure Access</h2>
+                <p className="mt-1 text-sm text-slate-600">Enter your 4-digit merchant PIN</p>
             </div>
 
-            {/* PIN Dots */}
-            <div className="flex gap-4 mb-12">
-                {[0, 1, 2, 3].map((i) => (
+            <div className="mb-12 flex gap-4">
+                {[0, 1, 2, 3].map((index) => (
                     <div
-                        key={i}
-                        className={`w-4 h-4 rounded-full transition-all ${i < pin.length
-                                ? error ? "bg-red-500" : "bg-indigo-500"
-                                : "bg-white/20"
-                            }`}
+                        key={index}
+                        className={`h-3.5 w-3.5 rounded-full transition-all ${index < pin.length ? "bg-[#3744D2]" : "bg-slate-300"}`}
                     />
                 ))}
             </div>
 
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
+            <div className="grid grid-cols-3 gap-3">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                     <button
                         key={num}
                         onClick={() => handlePress(num.toString())}
-                        className="w-20 h-20 rounded-full bg-neutral-800 text-2xl font-bold hover:bg-neutral-700 active:scale-95 transition-all"
+                        className="h-16 w-16 rounded-2xl border border-slate-200 bg-white text-xl font-black text-slate-900 shadow-sm hover:border-[#3744D2]/35"
                     >
                         {num}
                     </button>
                 ))}
-                <div /> {/* Empty slot */}
+                <div />
                 <button
                     onClick={() => handlePress("0")}
-                    className="w-20 h-20 rounded-full bg-neutral-800 text-2xl font-bold hover:bg-neutral-700 active:scale-95 transition-all"
+                    className="h-16 w-16 rounded-2xl border border-slate-200 bg-white text-xl font-black text-slate-900 shadow-sm hover:border-[#3744D2]/35"
                 >
                     0
                 </button>
                 <button
-                    onClick={handleDelete}
-                    className="w-20 h-20 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all"
+                    onClick={() => setPin((prev) => prev.slice(0, -1))}
+                    className="flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-[#3744D2]/35 hover:text-[#3744D2]"
                 >
-                    <Delete className="w-8 h-8" />
+                    <Delete className="h-6 w-6" />
                 </button>
             </div>
         </div>

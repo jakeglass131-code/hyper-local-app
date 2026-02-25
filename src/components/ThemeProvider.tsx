@@ -8,15 +8,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const root = document.documentElement;
-
-        // Apply theme
-        if (appearance.theme === "system") {
-            const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            root.setAttribute("data-theme", isDark ? "dark" : "light");
-        } else {
-            root.setAttribute("data-theme", appearance.theme);
-        }
-    }, [appearance.theme]);
+        root.setAttribute("data-theme", appearance.highContrast ? "high-contrast" : "light");
+    }, [appearance.highContrast]);
 
     return <>{children}</>;
 }

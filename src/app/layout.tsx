@@ -21,7 +21,7 @@ import { ToastProvider } from "@/components/Toast";
 
 // ... imports
 
-import { AIChatWidget } from "@/components/AIChatWidget";
+import AIChatWidget from "@/components/AIChatWidget";
 
 export default function RootLayout({
   children,
