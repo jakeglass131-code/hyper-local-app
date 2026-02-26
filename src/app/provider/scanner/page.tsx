@@ -19,11 +19,50 @@ export default function ProviderScannerPage() {
         [mode]
     );
 
+    // Helper: Determine if code is likely a Voucher (10 chars, dashes) or Token (6 digits)
+    const isVoucher = (code: string) => code.length > 8 || code.includes("-");
+
     const handleScan = async (code: string) => {
         if (processing) return;
         setProcessing(true);
 
         try {
+            // NEW: If mode is OFFER, try the new Voucher Redemption API first
+            if (mode === "OFFER") {
+                const res = await fetch("/api/claims/redeem", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        voucherCode: code,
+                        merchantId: "b1", // Mock Merchant ID
+                        merchantUserId: "staff_1"
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    setResult({
+                        success: true,
+                        message: `Redeemed: ${data.claim.offerTitle} (${data.claim.discountValue}${data.claim.discountType === 'percent' ? '%' : '$'} Off)`,
+                        data
+                    });
+                    return; // Exit early if success
+                } else {
+                    // fall through to try legacy token if logic dictates, 
+                    // but for now let's assume explicit modes.
+                    // If error was "Voucher not found" maybe it is a legacy token?
+                    // Let's rely on the result unless we want to fallback.
+                    // For MVP simplicity: If 10 chars -> Voucher API. If 6 chars -> Legacy API.
+                    if (isVoucher(code)) {
+                        setResult({ success: false, message: data.error || "Redemption failed" });
+                        return;
+                    }
+                    // else continue to legacy
+                }
+            }
+
+            // LEGACY: Token Redemption (Stamps or old Offers)
             const res = await fetch("/api/redeem", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -126,9 +165,9 @@ export default function ProviderScannerPage() {
                         </p>
                         <input
                             value={manualCode}
-                            onChange={(event) => setManualCode(event.target.value)}
-                            placeholder="Enter code"
-                            maxLength={6}
+                            onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                            placeholder={mode === "OFFER" ? "ABCD-EFGH-JK" : "123456"}
+                            maxLength={12}
                             className="mt-5 w-full max-w-xs rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.35em] text-slate-900 outline-none focus:border-[#3744D2]"
                         />
                         <div className="mt-5 flex w-full max-w-xs gap-2">
