@@ -71,10 +71,16 @@ export type Offer = {
 export type Claim = {
     id: string;
     offerId: string;
-    userId: string;
-    claimedAt: number;
-    status: "PENDING" | "COMPLETED" | "EXPIRED" | "CANCELLED";
-    completedAt?: number;
+    userId: string; // Consumer ID
+    merchantId: string;
+    voucherCode: string; // "ABCD-EFGH-JK"
+    status: "issued" | "redeemed" | "expired" | "cancelled";
+    issuedAt: number;
+    expiresAt: number;
+    redeemedAt?: number;
+    redeemedByMerchantUserId?: string;
+    notes?: string;
+    reservationName?: string; // Phase 4: Name for reservation
 };
 
 // TODO: Move to Supabase
@@ -145,6 +151,26 @@ export type SubscriptionLimits = {
     };
 };
 
+// Personalization Engine ("AI") Types
+export type UserProfile = {
+    userId: string;
+    categoryWeights: Record<string, number>; // e.g. "coffee": 12
+    businessWeights: Record<string, number>; // e.g. "b1": 5
+    avgDistanceKm: number;
+    lastUpdatedAt: number;
+};
+
+export type UserEvent = {
+    id: string;
+    userId: string;
+    eventType: "impression" | "click" | "favourite" | "redeem" | "book";
+    offerId?: string;
+    businessId: string;
+    category: string;
+    distanceKm?: number;
+    timestamp: number;
+};
+
 // Global in-memory store
 // TODO: Replace with Supabase database
 
@@ -165,6 +191,10 @@ class Store {
     // Phase 6 additions
     merchantProfiles: Map<string, MerchantProfile> = new Map();
 
+    // Personalization Engine ("AI") additions
+    userProfiles: Map<string, UserProfile> = new Map();
+    userEvents: Map<string, UserEvent> = new Map();
+
 
 
     constructor() {
@@ -174,6 +204,15 @@ class Store {
             name: "Coffee Loyalty",
             stampsRequired: 10,
             limitOnePerDay: false,
+        });
+
+        // Initialize Default User Profile (user_123) for simple MVP
+        this.userProfiles.set("user_123", {
+            userId: "user_123",
+            categoryWeights: {},
+            businessWeights: {},
+            avgDistanceKm: 2.0,
+            lastUpdatedAt: Date.now(),
         });
 
         // Add sample offers for map display
@@ -891,4 +930,7 @@ class Store {
 }
 
 // Singleton instance
-export const store = new Store();
+// Singleton pattern with global persistence for development hot-reloads
+const globalStore = global as unknown as { store: Store };
+export const store = globalStore.store || new Store();
+if (process.env.NODE_ENV !== 'production') globalStore.store = store;

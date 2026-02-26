@@ -15,11 +15,11 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    if (status === "COMPLETED") {
-        claim.status = "COMPLETED";
-        claim.completedAt = Date.now();
-    } else if (status === "CANCELLED") {
-        claim.status = "CANCELLED";
+    if (status === "redeemed") {
+        claim.status = "redeemed";
+        claim.redeemedAt = Date.now();
+    } else if (status === "cancelled") {
+        claim.status = "cancelled";
         // Refund inventory
         const offer = store.offers.get(claim.offerId);
         if (offer) {
@@ -42,7 +42,7 @@ export async function DELETE(
     }
 
     // Refund inventory if pending
-    if (claim.status === "PENDING") {
+    if (claim.status === "issued") {
         const offer = store.offers.get(claim.offerId);
         if (offer) {
             offer.claimedCount = Math.max(0, offer.claimedCount - 1);

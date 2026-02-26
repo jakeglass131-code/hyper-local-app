@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
         (c) => c.userId === userId
     );
 
-    // Sort by claimedAt DESC (newest first)
-    claims.sort((a, b) => b.claimedAt - a.claimedAt);
+    // Sort by issuedAt DESC (newest first)
+    claims.sort((a, b) => b.issuedAt - a.issuedAt);
 
     return NextResponse.json(claims);
 }
@@ -58,8 +58,11 @@ export async function POST(request: NextRequest) {
         id,
         offerId,
         userId,
-        claimedAt: Date.now(),
-        status: "PENDING",
+        merchantId: offer.businessId,
+        voucherCode: `VOUCHER-${Math.random().toString(36).substring(7).toUpperCase()}`,
+        status: "issued",
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
     };
 
     store.claims.set(id, claim);
