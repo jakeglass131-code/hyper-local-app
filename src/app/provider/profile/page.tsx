@@ -16,6 +16,7 @@ import {
 import { MerchantProfile } from "@/lib/store";
 import { PinLock } from "@/components/PinLock";
 import { LogoutButton } from "../components/LogoutButton";
+import { PlanSwitchModal } from "@/components/PlanSwitchModal";
 
 const userId = "provider_123";
 
@@ -25,6 +26,7 @@ export default function ProviderProfilePage() {
     const [isLocked, setIsLocked] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState<Partial<MerchantProfile>>({});
+    const [showPlanModal, setShowPlanModal] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -49,6 +51,18 @@ export default function ProviderProfilePage() {
         setProfile((prev) => ({ ...prev!, ...editForm }));
         setIsEditing(false);
         alert("Profile updated");
+    };
+
+    const handlePlanChange = async (tier: string) => {
+        try {
+            // In a real app, this would be a PATCH to /api/merchant/profile
+            setProfile((prev) => prev ? { ...prev, subscriptionTier: tier as any } : null);
+            setShowPlanModal(false);
+            alert(`Plan successfully switched to ${tier}!`);
+        } catch (error) {
+            console.error(error);
+            alert("Failed to switch plan");
+        }
     };
 
     const readiness = useMemo(() => {
@@ -213,9 +227,21 @@ export default function ProviderProfilePage() {
                             Current plan: <span className="text-[#3744D2] capitalize">{profile?.subscriptionTier || "free"}</span>
                         </p>
                         <p className="mt-1 text-sm text-slate-600">Upgrade for advanced automation, team permissions, and unlimited campaign variants.</p>
-                        <button className="mt-3 rounded-xl bg-[#3744D2] px-4 py-2 text-sm font-semibold text-white">Upgrade Plan</button>
+                        <button
+                            onClick={() => setShowPlanModal(true)}
+                            className="mt-3 rounded-xl bg-[#3744D2] px-4 py-2 text-sm font-semibold text-white"
+                        >
+                            {profile?.subscriptionTier && profile.subscriptionTier !== "free" ? "Switch Plan" : "Upgrade Plan"}
+                        </button>
                     </div>
                 </article>
+
+                <PlanSwitchModal
+                    isOpen={showPlanModal}
+                    onClose={() => setShowPlanModal(false)}
+                    onConfirm={handlePlanChange}
+                    currentPlan={profile?.subscriptionTier}
+                />
 
                 <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center gap-2">
