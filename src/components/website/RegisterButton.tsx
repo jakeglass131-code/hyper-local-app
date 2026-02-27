@@ -1,6 +1,6 @@
 "use client";
 
-import { useSubscriptionModal } from "@/components/website/SubscriptionProvider";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface RegisterButtonProps {
@@ -10,11 +10,16 @@ interface RegisterButtonProps {
 }
 
 export function RegisterButton({ className, children, tierId }: RegisterButtonProps) {
-    const { openModal } = useSubscriptionModal();
+    const router = useRouter();
+
+    const handleClick = () => {
+        const url = tierId ? `/business/register?plan=${tierId}` : "/business/register";
+        router.push(url);
+    };
 
     return (
         <button
-            onClick={() => openModal(tierId)}
+            onClick={handleClick}
             className={cn(className)}
         >
             {children || "Register"}

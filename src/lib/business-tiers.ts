@@ -29,8 +29,8 @@ export const businessTiers = [
         description: "Accelerate your local presence with advanced tools and higher visibility.",
         duration: "per month",
         icon: Shield,
-        color: "bg-[#3744D2]/5 text-[#3744D2] border-[#3744D2]/20",
-        accent: "text-[#3744D2]",
+        color: "bg-[#008A5E]/5 text-[#008A5E] border-[#008A5E]/20",
+        accent: "text-[#008A5E]",
         features: [
             "5 Active Campaigns",
             "High Map Priority",

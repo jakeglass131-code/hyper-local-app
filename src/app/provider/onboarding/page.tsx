@@ -55,7 +55,7 @@ export default function OnboardingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 px-4 py-8">
             <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Provider Onboarding</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008A5E]">Provider Onboarding</p>
 
                 {step === 1 && (
                     <div className="pt-3">
@@ -63,7 +63,7 @@ export default function OnboardingPage() {
                         <p className="mt-2 text-sm text-slate-600">This takes about 2 minutes and unlocks campaign tools.</p>
                         <button
                             onClick={() => setStep(2)}
-                            className="mt-6 w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white"
+                            className="mt-6 w-full rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white"
                         >
                             Get started
                         </button>
@@ -101,7 +101,7 @@ export default function OnboardingPage() {
                         <button
                             onClick={() => setStep(3)}
                             disabled={!formData.businessName || !formData.businessAddress}
-                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
+                            className="w-full rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
                         >
                             Next
                         </button>
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
                         <button
                             onClick={() => setStep(4)}
                             disabled={!formData.contactEmail}
-                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
+                            className="w-full rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
                         >
                             Next
                         </button>
@@ -145,11 +145,10 @@ export default function OnboardingPage() {
                             <button
                                 key={plan.tier}
                                 onClick={() => updateData({ subscriptionTier: plan.tier })}
-                                className={`w-full rounded-xl border p-4 text-left ${
-                                    formData.subscriptionTier === plan.tier
-                                        ? "border-[#3744D2] bg-[#3744D2]/5"
+                                className={`w-full rounded-xl border p-4 text-left ${formData.subscriptionTier === plan.tier
+                                        ? "border-[#008A5E] bg-[#008A5E]/5"
                                         : "border-slate-200 bg-white"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <p className="text-sm font-bold text-slate-900">{plan.name}</p>
@@ -161,7 +160,7 @@ export default function OnboardingPage() {
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="w-full rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
+                            className="w-full rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white disabled:opacity-45"
                         >
                             {loading ? "Setting up..." : "Complete setup"}
                         </button>
@@ -193,7 +192,7 @@ function Input({
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#008A5E]"
             />
         </label>
     );

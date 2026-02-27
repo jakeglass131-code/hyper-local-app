@@ -11,7 +11,7 @@ export function BusinessShell({ children }: { children: React.ReactNode }) {
             >
                 <BusinessHeader />
                 <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6">{children}</main>
-                <WebsiteFooter />
+                <WebsiteFooter tone="business" />
             </div>
         </SubscriptionProvider>
     );

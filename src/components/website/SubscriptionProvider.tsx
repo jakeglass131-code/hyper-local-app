@@ -83,7 +83,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         if (!selectedTier) return;
 
         if (typeof window !== "undefined") {
-            const { password, ...safeDraft } = formValues;
+            const safeDraft = {
+                email: formValues.email,
+                businessName: formValues.businessName,
+                contactName: formValues.contactName,
+                phone: formValues.phone,
+                addressLine1: formValues.addressLine1,
+                suburb: formValues.suburb,
+                state: formValues.state,
+                postcode: formValues.postcode,
+            };
             window.sessionStorage.setItem(
                 "merchant-signup-draft",
                 JSON.stringify({
@@ -147,7 +156,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                     >
                                         <div className="text-center mb-10">
                                             <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[#1f2a2a]">
-                                                Select your <span className="text-[#3744D2]">Growth Plan.</span>
+                                                Select your <span className="text-[#008A5E]">Growth Plan.</span>
                                             </h2>
                                             <p className="mt-4 text-gray-500 font-medium">
                                                 Choose a tier, then create your merchant account.
@@ -160,11 +169,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                                     key={tier.id}
                                                     className={cn(
                                                         "relative flex flex-col rounded-[2.5rem] border bg-white p-6 transition-all hover:shadow-xl",
-                                                        tier.popular ? "border-[#3744D2] shadow-lg" : "border-gray-200"
+                                                        tier.popular ? "border-[#008A5E] shadow-lg" : "border-gray-200"
                                                     )}
                                                 >
                                                     {tier.popular && (
-                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3744D2] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
+                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#008A5E] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
                                                             Recommended
                                                         </div>
                                                     )}
@@ -189,8 +198,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                                     <div className="flex-1 space-y-3">
                                                         {tier.features.slice(0, 5).map((feature) => (
                                                             <div key={feature} className="flex items-start gap-2">
-                                                                <div className={cn("mt-1 rounded-full p-0.5", tier.popular ? "bg-[#3744D2]/10" : "bg-gray-100")}>
-                                                                    <Check className={cn("h-2.5 w-2.5", tier.popular ? "text-[#3744D2]" : "text-gray-400")} strokeWidth={3} />
+                                                                <div className={cn("mt-1 rounded-full p-0.5", tier.popular ? "bg-[#008A5E]/10" : "bg-gray-100")}>
+                                                                    <Check className={cn("h-2.5 w-2.5", tier.popular ? "text-[#008A5E]" : "text-gray-400")} strokeWidth={3} />
                                                                 </div>
                                                                 <span className="text-xs font-semibold text-[#1f2a2a]">{feature}</span>
                                                             </div>
@@ -208,7 +217,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                                         className={cn(
                                                             "mt-8 flex w-full items-center justify-center rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                                                             tier.popular
-                                                                ? "bg-[#3744D2] text-white shadow-lg shadow-[#3744D2]/20 hover:brightness-110"
+                                                                ? "bg-[#008A5E] text-white shadow-lg shadow-[#008A5E]/20 hover:brightness-110"
                                                                 : "bg-white border border-gray-200 text-[#1f2a2a] hover:bg-gray-50"
                                                         )}
                                                     >
@@ -227,9 +236,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                         className="relative min-h-[640px] p-6 sm:p-8"
                                     >
                                         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2.25rem]">
-                                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(55,68,210,0.3),transparent_45%),radial-gradient(circle_at_80%_90%,rgba(0,170,124,0.15),transparent_30%),linear-gradient(160deg,#04070f_0%,#07101f_45%,#0a1018_100%)]" />
+                                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,138,94,0.3),transparent_45%),radial-gradient(circle_at_80%_90%,rgba(0,170,124,0.15),transparent_30%),linear-gradient(160deg,#04070f_0%,#07101f_45%,#0a1018_100%)]" />
                                             <motion.div
-                                                className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#3744D2]/25 blur-3xl"
+                                                className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#008A5E]/25 blur-3xl"
                                                 animate={{ x: [0, 28, -12, 0], y: [0, 16, -18, 0], scale: [1, 1.12, 0.92, 1] }}
                                                 transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
                                             />
@@ -308,7 +317,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                                                                 value={formValues.password}
                                                                 onChange={(event) => handleFormChange("password", event.target.value)}
                                                                 type={showPassword ? "text" : "password"}
-                                                                className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-white placeholder:text-white/45 focus:border-[#3744D2] focus:bg-white/10 focus:outline-none"
+                                                                className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-white placeholder:text-white/45 focus:border-[#008A5E] focus:bg-white/10 focus:outline-none"
                                                                 placeholder="Create password"
                                                                 minLength={8}
                                                                 required
@@ -407,7 +416,7 @@ function InputField({
                 required={required}
                 inputMode={inputMode}
                 placeholder={placeholder}
-                className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-white placeholder:text-white/45 focus:border-[#3744D2] focus:bg-white/10 focus:outline-none"
+                className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-white placeholder:text-white/45 focus:border-[#008A5E] focus:bg-white/10 focus:outline-none"
             />
         </div>
     );

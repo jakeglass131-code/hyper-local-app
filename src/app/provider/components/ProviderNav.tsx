@@ -30,7 +30,7 @@ export function ProviderNav() {
                             className={cn(
                                 "flex flex-col items-center justify-center gap-1.5 rounded-xl transition-all",
                                 isActive
-                                    ? "text-[#3744D2]"
+                                    ? "text-[#008A5E]"
                                     : "text-slate-500 hover:text-slate-800"
                             )}
                         >
@@ -38,7 +38,7 @@ export function ProviderNav() {
                                 className={cn(
                                     "rounded-xl border px-2 py-1 transition-all",
                                     isActive
-                                        ? "border-[#3744D2]/25 bg-[#3744D2]/10"
+                                        ? "border-[#008A5E]/25 bg-[#008A5E]/10"
                                         : "border-transparent bg-transparent"
                                 )}
                             >

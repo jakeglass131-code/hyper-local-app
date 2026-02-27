@@ -1,131 +1,298 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { Mail, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
+
+type AccountType = "consumer" | "provider";
+
+type SignUpFormValues = {
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  accountType: AccountType;
+  acceptTerms: boolean;
+};
+
+type FormErrors = Partial<Record<keyof SignUpFormValues, string>>;
+
+const initialValues: SignUpFormValues = {
+  fullName: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+  accountType: "consumer",
+  acceptTerms: false,
+};
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignUpFormPage() {
-  const [phone, setPhone] = useState("");
+  const router = useRouter();
+  const [values, setValues] = useState<SignUpFormValues>(initialValues);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  const passwordStrength = useMemo(() => {
+    const value = values.password;
+    if (!value) return { label: "Not set", color: "bg-slate-200", width: "w-0" };
+    if (value.length < 8) return { label: "Weak", color: "bg-red-400", width: "w-1/3" };
+    if (!/[A-Z]/.test(value) || !/[0-9]/.test(value)) {
+      return { label: "Medium", color: "bg-amber-400", width: "w-2/3" };
+    }
+    return { label: "Strong", color: "bg-emerald-500", width: "w-full" };
+  }, [values.password]);
+
+  const setField = <K extends keyof SignUpFormValues>(key: K, value: SignUpFormValues[K]) => {
+    setValues((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+    if (submitMessage) setSubmitMessage("");
+  };
+
+  const validate = (): FormErrors => {
+    const nextErrors: FormErrors = {};
+
+    if (!values.fullName.trim()) nextErrors.fullName = "Full name is required.";
+    if (!values.email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!emailRegex.test(values.email)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!values.phone.trim()) {
+      nextErrors.phone = "Mobile number is required.";
+    } else if (values.phone.replace(/[^\d]/g, "").length < 10) {
+      nextErrors.phone = "Please enter a valid mobile number.";
+    }
+
+    if (!values.password) {
+      nextErrors.password = "Password is required.";
+    } else if (values.password.length < 8) {
+      nextErrors.password = "Use at least 8 characters.";
+    }
+
+    if (!values.confirmPassword) {
+      nextErrors.confirmPassword = "Please confirm your password.";
+    } else if (values.confirmPassword !== values.password) {
+      nextErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (!values.acceptTerms) {
+      nextErrors.acceptTerms = "You must accept the terms and privacy policy.";
+    }
+
+    return nextErrors;
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setSubmitting(true);
+    setErrors({});
+    setSubmitMessage("");
+
+    try {
+      localStorage.setItem(
+        "hyper-local-signup-draft",
+        JSON.stringify({
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          accountType: values.accountType,
+          createdAt: Date.now(),
+        })
+      );
+
+      setSubmitMessage("Account created. You can now log in.");
+      setTimeout(() => router.push("/login"), 700);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-between pb-8">
-      <div className="relative w-full h-[380px] overflow-hidden">
-        <div className="absolute inset-0 bg-[#E03546]">
-          <Image
-            src="/images/auth-bg.png"
-            alt="Food Pattern"
-            fill
-            className="object-cover opacity-90"
-          />
-        </div>
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h1 className="text-white text-6xl font-[1000] italic tracking-tight drop-shadow-lg">
-            hyper local
+    <AuthShell role={values.accountType === "provider" ? "merchant" : "consumer"}>
+      <div className="mx-auto w-full max-w-lg">
+        <div className="rounded-[2rem] border border-white/[0.08] bg-white/[0.03] p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
+          <p className="inline-flex rounded-full bg-[#3744D2]/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c7ceff]">
+            Create Account
+          </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+            Join Hyper Local
           </h1>
-        </div>
+          <p className="mt-2 text-sm text-white/60">
+            Sign up in under a minute to discover local deals and redeem instantly.
+          </p>
 
-        <button className="absolute top-10 right-6 bg-black/40 text-white px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
-          Skip
-        </button>
-      </div>
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="text-sm font-semibold text-white/80">Full Name</label>
+              <input
+                type="text"
+                value={values.fullName}
+                onChange={(event) => setField("fullName", event.target.value)}
+                placeholder="Jane Walker"
+                className="mt-1.5 w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#3744D2]"
+              />
+              {errors.fullName ? <p className="mt-1 text-xs text-red-600">{errors.fullName}</p> : null}
+            </div>
 
-      <div className="w-full max-w-md px-6 -mt-10 relative z-10 bg-white rounded-t-[40px] flex flex-col items-center">
-        <div className="pt-8 w-full">
-          <h2 className="text-[28px] font-extrabold text-[#1c1c1c] text-center leading-tight">
-            Singapore&apos;s #1 Local Food &amp; Deals App
-          </h2>
+            <div>
+              <label className="text-sm font-semibold text-white/80">Email</label>
+              <input
+                type="email"
+                value={values.email}
+                onChange={(event) => setField("email", event.target.value)}
+                placeholder="you@example.com"
+                className="mt-1.5 w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#3744D2]"
+              />
+              {errors.email ? <p className="mt-1 text-xs text-red-600">{errors.email}</p> : null}
+            </div>
 
-          <div className="mt-8 flex items-center justify-center gap-4 text-gray-400">
-            <div className="h-[1px] bg-gray-200 flex-1"></div>
-            <span className="text-sm font-medium text-gray-500">Log in or sign up</span>
-            <div className="h-[1px] bg-gray-200 flex-1"></div>
-          </div>
-
-          <div className="mt-8 flex gap-3">
-            <button className="flex items-center gap-2 border border-gray-300 rounded-xl px-3 py-3 shadow-sm hover:border-gray-400 transition-colors">
-              <span className="text-lg">🇺🇸</span>
-              <ChevronDown size={16} className="text-gray-500" />
-            </button>
-
-            <div className="flex-1 flex items-center border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus-within:border-[#ef4f5f] transition-colors gap-3">
-              <span className="text-gray-900 font-medium">+1</span>
+            <div>
+              <label className="text-sm font-semibold text-white/80">Mobile Number</label>
               <input
                 type="tel"
-                placeholder="Enter Mobile Number"
-                className="flex-1 outline-none text-[#1c1c1c] placeholder-gray-400 bg-transparent"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={values.phone}
+                onChange={(event) => setField("phone", event.target.value)}
+                placeholder="+1 202 555 0192"
+                className="mt-1.5 w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#3744D2]"
               />
+              {errors.phone ? <p className="mt-1 text-xs text-red-600">{errors.phone}</p> : null}
             </div>
-          </div>
 
-          <button className="mt-4 w-full bg-[#ef4f5f] text-white font-semibold py-4 rounded-xl shadow-md active:scale-[0.98] transition-all text-lg">
-            Continue
-          </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setField("accountType", "consumer")}
+                className={`rounded-xl border px-3 py-3 text-sm font-semibold transition ${values.accountType === "consumer"
+                  ? "border-[#3744D2] bg-[#3744D2]/20 text-[#c7ceff]"
+                  : "border-white/[0.1] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+                  }`}
+              >
+                Consumer Account
+              </button>
+              <button
+                type="button"
+                onClick={() => setField("accountType", "provider")}
+                className={`rounded-xl border px-3 py-3 text-sm font-semibold transition ${values.accountType === "provider"
+                  ? "border-[#3744D2] bg-[#3744D2]/20 text-[#c7ceff]"
+                  : "border-white/[0.1] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+                  }`}
+              >
+                Merchant Account
+              </button>
+            </div>
 
-          <div className="mt-8 flex items-center justify-center gap-4 text-gray-400">
-            <div className="h-[1px] bg-gray-100 flex-1"></div>
-            <span className="text-sm font-medium text-gray-400">or</span>
-            <div className="h-[1px] bg-gray-100 flex-1"></div>
-          </div>
+            <div>
+              <label className="text-sm font-semibold text-white/80">Password</label>
+              <div className="mt-1.5 flex items-center rounded-xl border border-white/[0.1] bg-white/[0.04] pr-2 focus-within:border-[#3744D2]">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={values.password}
+                  onChange={(event) => setField("password", event.target.value)}
+                  placeholder="Create a password"
+                  className="w-full rounded-xl bg-transparent px-3.5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="rounded-lg p-1.5 text-white/70 hover:bg-white/[0.08]"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                <div className={`h-1.5 rounded-full transition-all ${passwordStrength.color} ${passwordStrength.width}`} />
+              </div>
+              <p className="mt-1 text-xs text-white/55">Password strength: {passwordStrength.label}</p>
+              {errors.password ? <p className="mt-1 text-xs text-red-600">{errors.password}</p> : null}
+            </div>
 
-          <div className="mt-8 flex justify-center gap-6">
-            <SocialButton icon={<GoogleIcon />} />
-            <SocialButton icon={<AppleIcon />} />
-            <SocialButton icon={<Mail size={24} className="text-red-500" />} />
-          </div>
+            <div>
+              <label className="text-sm font-semibold text-white/80">Confirm Password</label>
+              <div className="mt-1.5 flex items-center rounded-xl border border-white/[0.1] bg-white/[0.04] pr-2 focus-within:border-[#3744D2]">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={values.confirmPassword}
+                  onChange={(event) => setField("confirmPassword", event.target.value)}
+                  placeholder="Re-enter password"
+                  className="w-full rounded-xl bg-transparent px-3.5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="rounded-lg p-1.5 text-white/70 hover:bg-white/[0.08]"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword ? <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p> : null}
+            </div>
 
-          <div className="mt-12 text-center text-[11px] leading-relaxed text-gray-500 px-4">
-            By continuing, you agree to our
-            <br />
-            <span className="border-b border-dotted border-gray-400 mx-1">Terms of Service</span>
-            <span className="border-b border-dotted border-gray-400 mx-1">Privacy Policy</span>
-            <span className="border-b border-dotted border-gray-400 mx-1">Content Policies</span>
-          </div>
+            <label className="flex items-start gap-2 rounded-xl border border-white/[0.1] bg-white/[0.03] px-3 py-3">
+              <input
+                type="checkbox"
+                checked={values.acceptTerms}
+                onChange={(event) => setField("acceptTerms", event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-[#3744D2]"
+              />
+              <span className="text-xs leading-relaxed text-white/70">
+                I agree to the{" "}
+                <Link href="/terms" className="font-semibold text-[#3744D2] underline underline-offset-2">
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="font-semibold text-[#3744D2] underline underline-offset-2">
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
+            {errors.acceptTerms ? <p className="text-xs text-red-600">{errors.acceptTerms}</p> : null}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3744D2] px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#3744D2]/20 transition hover:bg-[#2d36ab] disabled:opacity-70"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </button>
+
+            {submitMessage ? <p className="text-sm font-medium text-emerald-600">{submitMessage}</p> : null}
+          </form>
+
+          <p className="mt-6 text-center text-sm text-white/55">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-[#3744D2] hover:underline">
+              Log in
+            </Link>
+          </p>
         </div>
       </div>
-
-      <div className="w-32 h-1 bg-black rounded-full mt-4"></div>
-    </div>
-  );
-}
-
-function SocialButton({ icon }: { icon: React.ReactNode }) {
-  return (
-    <button className="w-14 h-14 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
-      {icon}
-    </button>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24">
-      <path
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-        fill="#4285F4"
-      />
-      <path
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-        fill="#34A853"
-      />
-      <path
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-        fill="#EA4335"
-      />
-    </svg>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.05 20.28c-.96.95-2.21 1.72-3.71 1.72-1.45 0-2.31-.77-3.76-.77-1.45 0-2.45.75-3.69.75-1.5 0-2.75-.8-3.71-1.74-2.1-2.1-3.61-6.23-1.44-10.05 1-1.77 2.76-2.9 4.67-2.9 1.45 0 2.45.74 3.65.74 1.2 0 2.05-.72 3.66-.72 1.55 0 2.85.75 3.75 1.85-3.15 1.9-2.65 6.35.5 8.1-.65 1.6-1.55 3.05-2.55 4h-.01zM12.03 5.4c-.1 1.7 1.35 3.5 3.05 3.5.15-1.8-1.35-3.6-3.05-3.5z" />
-    </svg>
+    </AuthShell>
   );
 }

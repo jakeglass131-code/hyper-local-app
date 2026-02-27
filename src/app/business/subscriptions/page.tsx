@@ -12,18 +12,18 @@ export default function SubscriptionsPage() {
     return (
         <BusinessShell>
             <WebsiteScrollReveal>
-                <section className="relative overflow-hidden rounded-3xl border border-[#d6e4dc] bg-gradient-to-br from-[#eef2ff] to-white p-8 sm:p-12 text-center">
-                    <div className="website-orb-fast absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#3744D2]/10 blur-3xl" />
-                    <div className="website-orb-slow absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-amber-200/10 blur-3xl" />
+                <section className="relative overflow-hidden rounded-3xl border border-[#d6e4dc] bg-gradient-to-br from-[#f0fdf4] to-white p-8 sm:p-12 text-center">
+                    <div className="website-orb-fast absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#008A5E]/10 blur-3xl" />
+                    <div className="website-orb-slow absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-emerald-200/10 blur-3xl" />
 
                     <div className="relative z-10 max-w-3xl mx-auto">
-                        <p className="inline-flex items-center gap-2 rounded-full border border-[#d6e4dc] bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#3744D2]">
+                        <p className="inline-flex items-center gap-2 rounded-full border border-[#d6e4dc] bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#008A5E]">
                             <Sparkles className="h-3.5 w-3.5" />
                             Growth Architecture
                         </p>
                         <h1 className="mt-6 text-4xl font-black tracking-tighter text-[#1f2a2a] sm:text-6xl">
                             Scalable plans for
-                            <span className="text-[#3744D2]"> local dominance.</span>
+                            <span className="text-[#008A5E]"> local dominance.</span>
                         </h1>
                         <p className="mt-4 text-lg text-[#4d5d58]">
                             Choose the tier that matches your business velocity. From hyper-local testing to district-wide leadership.
@@ -37,10 +37,10 @@ export default function SubscriptionsPage() {
                     <WebsiteScrollReveal key={tier.name} delayMs={100 * i}>
                         <div className={cn(
                             "relative flex flex-col h-full rounded-[2.5rem] border bg-white p-8 transition-all hover:shadow-2xl hover:scale-[1.02]",
-                            tier.popular ? "border-[#3744D2] shadow-xl shadow-[#3744D2]/5" : "border-[#dfe5df]"
+                            tier.popular ? "border-[#008A5E] shadow-xl shadow-[#008A5E]/5" : "border-[#dfe5df]"
                         )}>
                             {tier.popular && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#3744D2] text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#008A5E] text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
                                     Most Popular Choice
                                 </div>
                             )}
@@ -65,8 +65,8 @@ export default function SubscriptionsPage() {
                             <div className="flex-1 space-y-4">
                                 {tier.features.map((feature) => (
                                     <div key={feature} className="flex items-start gap-3">
-                                        <div className={cn("mt-1 rounded-full p-0.5", tier.popular ? "bg-[#3744D2]/10" : "bg-slate-100")}>
-                                            <Check className={cn("h-3 w-3", tier.popular ? "text-[#3744D2]" : "text-slate-400")} strokeWidth={3} />
+                                        <div className={cn("mt-1 rounded-full p-0.5", tier.popular ? "bg-[#008A5E]/10" : "bg-slate-100")}>
+                                            <Check className={cn("h-3 w-3", tier.popular ? "text-[#008A5E]" : "text-slate-400")} strokeWidth={3} />
                                         </div>
                                         <span className="text-sm font-semibold text-[#1f2a2a]">{feature}</span>
                                     </div>
@@ -78,7 +78,7 @@ export default function SubscriptionsPage() {
                                 className={cn(
                                     "mt-10 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition-all",
                                     tier.popular
-                                        ? "bg-[#3744D2] text-white shadow-xl shadow-[#3744D2]/25 hover:brightness-110"
+                                        ? "bg-[#008A5E] text-white shadow-xl shadow-[#008A5E]/25 hover:brightness-110"
                                         : "bg-white border border-[#dfe5df] text-[#1f2a2a] hover:bg-slate-50"
                                 )}
                             >
@@ -90,7 +90,7 @@ export default function SubscriptionsPage() {
             </div>
 
             <WebsiteScrollReveal delayMs={400} className="mt-20">
-                <section className="rounded-[3rem] border border-[#3744D2]/20 bg-[#3744D2] p-8 md:p-16 text-white text-center">
+                <section className="rounded-[3rem] border border-[#008A5E]/20 bg-[#008A5E] p-8 md:p-16 text-white text-center">
                     <h2 className="text-3xl font-black tracking-tight md:text-5xl">Scale without the guesswork.</h2>
                     <p className="mt-6 text-lg text-white/80 max-w-2xl mx-auto">
                         Join 2,400+ merchants who use HyperLocal to identify hidden local demand and convert walking traffic into loyal customers.

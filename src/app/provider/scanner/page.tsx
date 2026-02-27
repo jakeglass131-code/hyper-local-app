@@ -100,7 +100,7 @@ export default function ProviderScannerPage() {
     return (
         <div className="min-h-screen pb-28 pt-6">
             <header className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Front Counter Tool</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008A5E]">Front Counter Tool</p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Merchant Scanner</h1>
                 <p className="mt-1 text-sm text-slate-600">Fast verification for offers and loyalty actions.</p>
             </header>
@@ -109,22 +109,22 @@ export default function ProviderScannerPage() {
                 <div className="mb-3 flex rounded-xl border border-slate-200 bg-slate-50 p-1">
                     <button
                         onClick={() => setMode("OFFER")}
-                        className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === "OFFER" ? "bg-[#3744D2] text-white" : "text-slate-600 hover:text-slate-900"
+                        className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === "OFFER" ? "bg-[#008A5E] text-white" : "text-slate-600 hover:text-slate-900"
                             }`}
                     >
                         Redeem Offer
                     </button>
                     <button
                         onClick={() => setMode("STAMP")}
-                        className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === "STAMP" ? "bg-[#3744D2] text-white" : "text-slate-600 hover:text-slate-900"
+                        className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === "STAMP" ? "bg-[#008A5E] text-white" : "text-slate-600 hover:text-slate-900"
                             }`}
                     >
                         Give Stamp
                     </button>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl border border-[#3744D2]/15 bg-[#3744D2]/5 px-3 py-2 text-sm text-slate-700">
-                    <ShieldCheck className="h-4 w-4 text-[#3744D2]" />
+                <div className="flex items-center gap-2 rounded-xl border border-[#008A5E]/15 bg-[#008A5E]/5 px-3 py-2 text-sm text-slate-700">
+                    <ShieldCheck className="h-4 w-4 text-[#008A5E]" />
                     {modeCopy}
                 </div>
             </section>
@@ -141,7 +141,7 @@ export default function ProviderScannerPage() {
                 {result && (
                     <div className="flex min-h-[360px] flex-col items-center justify-center p-6 text-center">
                         <div
-                            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${result.success ? "bg-[#3744D2]/10 text-[#3744D2]" : "bg-rose-100 text-rose-600"
+                            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${result.success ? "bg-[#008A5E]/10 text-[#008A5E]" : "bg-rose-100 text-rose-600"
                                 }`}
                         >
                             {result.success ? <CheckCircle className="h-9 w-9" /> : <XCircle className="h-9 w-9" />}
@@ -150,7 +150,7 @@ export default function ProviderScannerPage() {
                         <p className="mt-2 text-sm text-slate-600">{result.message}</p>
                         <button
                             onClick={reset}
-                            className="mt-6 rounded-xl bg-[#3744D2] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20"
+                            className="mt-6 rounded-xl bg-[#008A5E] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#008A5E]/20"
                         >
                             Scan Next
                         </button>
@@ -161,14 +161,14 @@ export default function ProviderScannerPage() {
                     <div className="flex min-h-[360px] flex-col items-center justify-center p-6">
                         <h2 className="text-xl font-black text-slate-900">Manual Code Entry</h2>
                         <p className="mt-1 text-sm text-slate-600">
-                            Mode: <span className="font-semibold text-[#3744D2]">{mode === "OFFER" ? "Redeem Offer" : "Give Stamp"}</span>
+                            Mode: <span className="font-semibold text-[#008A5E]">{mode === "OFFER" ? "Redeem Offer" : "Give Stamp"}</span>
                         </p>
                         <input
                             value={manualCode}
                             onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                             placeholder={mode === "OFFER" ? "ABCD-EFGH-JK" : "123456"}
                             maxLength={12}
-                            className="mt-5 w-full max-w-xs rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.35em] text-slate-900 outline-none focus:border-[#3744D2]"
+                            className="mt-5 w-full max-w-xs rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.35em] text-slate-900 outline-none focus:border-[#008A5E]"
                         />
                         <div className="mt-5 flex w-full max-w-xs gap-2">
                             <button
@@ -180,7 +180,7 @@ export default function ProviderScannerPage() {
                             <button
                                 onClick={() => handleScan(manualCode)}
                                 disabled={!manualCode}
-                                className="flex-1 rounded-xl bg-[#3744D2] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-45"
+                                className="flex-1 rounded-xl bg-[#008A5E] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-45"
                             >
                                 Submit
                             </button>
@@ -191,7 +191,7 @@ export default function ProviderScannerPage() {
                 {!result && !showManualInput && (
                     <button
                         onClick={() => setShowManualInput(true)}
-                        className="absolute bottom-4 right-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-[#3744D2]/30 hover:text-[#3744D2]"
+                        className="absolute bottom-4 right-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-[#008A5E]/30 hover:text-[#008A5E]"
                     >
                         <Keyboard className="h-4 w-4" />
                         Manual
@@ -210,7 +210,7 @@ export default function ProviderScannerPage() {
 function InfoCard({ title, detail, icon }: { title: string; detail: string; icon: React.ReactNode }) {
     return (
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 inline-flex rounded-lg bg-[#3744D2]/10 p-2 text-[#3744D2]">{icon}</div>
+            <div className="mb-2 inline-flex rounded-lg bg-[#008A5E]/10 p-2 text-[#008A5E]">{icon}</div>
             <p className="text-sm font-bold text-slate-900">{title}</p>
             <p className="mt-1 text-sm text-slate-600">{detail}</p>
         </article>

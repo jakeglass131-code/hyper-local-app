@@ -96,12 +96,12 @@ export default function CreateOfferPage() {
             <header className="mb-5">
                 <button
                     onClick={() => (step > 1 ? setStep(step - 1) : router.back())}
-                    className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#3744D2]"
+                    className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#008A5E]"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                 </button>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Campaign Builder</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008A5E]">Campaign Builder</p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Create Offer</h1>
                 <p className="mt-1 text-sm text-slate-600">Step {step} of {totalSteps}</p>
             </header>
@@ -110,7 +110,7 @@ export default function CreateOfferPage() {
                 {Array.from({ length: totalSteps }).map((_, index) => (
                     <div key={index} className="h-1.5 flex-1 rounded-full bg-slate-200">
                         <div
-                            className="h-1.5 rounded-full bg-[#3744D2] transition-all"
+                            className="h-1.5 rounded-full bg-[#008A5E] transition-all"
                             style={{ width: `${index < step ? 100 : 0}%` }}
                         />
                     </div>
@@ -176,11 +176,10 @@ export default function CreateOfferPage() {
                                     <button
                                         key={type}
                                         onClick={() => updateData({ discountType: type })}
-                                        className={`rounded-xl border px-3 py-2 text-sm font-semibold capitalize ${
-                                            offerData.discountType === type
-                                                ? "border-[#3744D2] bg-[#3744D2]/10 text-[#3744D2]"
-                                                : "border-slate-200 bg-white text-slate-600"
-                                        }`}
+                                        className={`rounded-xl border px-3 py-2 text-sm font-semibold capitalize ${offerData.discountType === type
+                                            ? "border-[#008A5E] bg-[#008A5E]/10 text-[#008A5E]"
+                                            : "border-slate-200 bg-white text-slate-600"
+                                            }`}
                                     >
                                         {type}
                                     </button>
@@ -245,11 +244,10 @@ export default function CreateOfferPage() {
                                             : [...current, segment];
                                         updateData({ targetDemographics: updated });
                                     }}
-                                    className={`rounded-full border px-3 py-1.5 text-sm font-semibold capitalize ${
-                                        offerData.targetDemographics.includes(segment)
-                                            ? "border-[#3744D2] bg-[#3744D2] text-white"
-                                            : "border-slate-200 bg-white text-slate-600"
-                                    }`}
+                                    className={`rounded-full border px-3 py-1.5 text-sm font-semibold capitalize ${offerData.targetDemographics.includes(segment)
+                                        ? "border-[#008A5E] bg-[#008A5E] text-white"
+                                        : "border-slate-200 bg-white text-slate-600"
+                                        }`}
                                 >
                                     {segment}
                                 </button>
@@ -285,7 +283,7 @@ export default function CreateOfferPage() {
                 {step < totalSteps ? (
                     <button
                         onClick={() => setStep((prev) => prev + 1)}
-                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20"
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#008A5E]/20"
                     >
                         Next
                         <ArrowRight className="h-4 w-4" />
@@ -294,7 +292,7 @@ export default function CreateOfferPage() {
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#3744D2] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20 disabled:opacity-45"
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#008A5E] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#008A5E]/20 disabled:opacity-45"
                     >
                         {loading ? "Creating..." : "Publish Offer"}
                         <Check className="h-4 w-4" />
@@ -326,7 +324,7 @@ function InputField({
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#008A5E]"
             />
         </label>
     );
@@ -351,7 +349,7 @@ function TextAreaField({
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#008A5E]"
             />
         </label>
     );
@@ -374,7 +372,7 @@ function SelectField({
             <select
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#008A5E]"
             >
                 {options.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -404,7 +402,7 @@ function DateField({
                     type="date"
                     value={value}
                     onChange={(event) => onChange(event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none focus:border-[#3744D2]"
+                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none focus:border-[#008A5E]"
                 />
             </div>
         </label>

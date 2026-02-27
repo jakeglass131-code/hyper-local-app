@@ -1,122 +1,81 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function SignUpPage() {
   const router = useRouter();
 
   const products = [
-    { icon: "🎬", label: "Movie Tickets", bg: "#F7E6B5" },
-    { icon: "💇", label: "Haircuts", bg: "#CDE5FF" },
-    { icon: "🍔", label: "Food", bg: "#FFD8D8" },
-    { icon: "💅", label: "Nails", bg: "#FCE1F2" },
-    { icon: "☕", label: "Coffee", bg: "#FDE4C9" },
-    { icon: "🧘", label: "Wellness", bg: "#D5F5ED" },
-    { icon: "🛒", label: "Groceries", bg: "#FFE8C9" },
-    { icon: "🎟️", label: "Events", bg: "#FFE3D5" },
-    { icon: "🍣", label: "Dining", bg: "#D7F1FF" },
+    { icon: "🎬", label: "Movies", bg: "rgba(247, 230, 181, 0.05)", border: "rgba(247, 230, 181, 0.2)" },
+    { icon: "💇", label: "Beauty", bg: "rgba(205, 229, 255, 0.05)", border: "rgba(205, 229, 255, 0.2)" },
+    { icon: "🍔", label: "Dining", bg: "rgba(255, 216, 216, 0.05)", border: "rgba(255, 216, 216, 0.2)" },
+    { icon: "💅", label: "Nails", bg: "rgba(252, 225, 242, 0.05)", border: "rgba(252, 225, 242, 0.2)" },
+    { icon: "☕", label: "Coffee", bg: "rgba(253, 228, 201, 0.05)", border: "rgba(253, 228, 201, 0.2)" },
+    { icon: "🧘", label: "Zen", bg: "rgba(213, 245, 237, 0.05)", border: "rgba(213, 245, 237, 0.2)" },
   ];
 
   return (
-    <div
-      className="min-h-screen px-4 pb-10 pt-8 sm:px-6"
-      style={{
-        background:
-          "radial-gradient(circle at top, #f8f7f2 0%, #f2f2ec 42%, #ecece6 100%)",
-        fontFamily: '"Avenir Next", "Nunito Sans", "Segoe UI", sans-serif',
-      }}
-    >
-      <div className="mx-auto flex w-full max-w-md flex-col items-center">
-        <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#3d6332] shadow-lg shadow-[#304e27]/30">
-          <Sparkles className="h-8 w-8 text-[#f1f6e8]" />
+    <AuthShell role="consumer">
+      <div className="flex flex-col items-center">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-black tracking-tight text-white italic leading-tight">
+            Discover local <br />
+            <span className="text-[#3744D2]">without the hassle.</span>
+          </h1>
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-white/30 max-w-[240px] mx-auto">
+            High-intent deals from nearby districts.
+          </p>
         </div>
 
-        <h1
-          className="text-center text-[48px] leading-[1.08] text-[#2b1313]"
-          style={{
-            fontFamily:
-              '"Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif',
-          }}
-        >
-          <span className="font-semibold italic text-[#375f2d] underline decoration-[#375f2d]/70">
-            Discover local
-          </span>{" "}
-          deals without the hassle
-        </h1>
-
-        <p className="mb-8 mt-3 text-center text-sm text-[#5f5348]">
-          Movie tickets, haircuts, food, nails, and more in one app.
-        </p>
-
-        <div className="grid w-full grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid w-full grid-cols-3 gap-3">
           {products.map((product, index) => (
             <div
               key={product.label}
-              className="auth-tile"
+              className="auth-tile group flex flex-col items-center justify-center rounded-[1.5rem] border border-white/[0.08] bg-white/[0.03] p-4 transition-all hover:scale-105 hover:bg-white/[0.06]"
               style={{
-                backgroundColor: product.bg,
-                animationDelay: `${index * 160}ms`,
-                animationDuration: `${3800 + (index % 4) * 600}ms`,
+                animationDelay: `${index * 150}ms`,
+                animationDuration: '4s'
               }}
             >
-              <div className="text-5xl leading-none">{product.icon}</div>
-              <p className="mt-2 text-center text-xs font-semibold text-[#3f3328]">
+              <div className="text-3xl filter grayscale group-hover:grayscale-0 transition-all duration-500">{product.icon}</div>
+              <p className="mt-2 text-[8px] font-black uppercase tracking-widest text-white/20 group-hover:text-white transition-colors">
                 {product.label}
               </p>
             </div>
           ))}
         </div>
 
-        <button
-          onClick={() => router.push("/auth/signup/form")}
-          className="mt-10 w-full rounded-[22px] bg-[#2f5b28] px-6 py-4 text-lg font-semibold text-[#f5f8ef] shadow-[0_16px_36px_-18px_rgba(42,86,35,0.9)] transition-transform active:scale-[0.98]"
-        >
-          Sign Up
-        </button>
+        <div className="mt-12 w-full space-y-3">
+          <button
+            onClick={() => router.push("/auth/signup/form")}
+            className="group relative h-14 w-full overflow-hidden rounded-2xl bg-white text-[10px] font-black uppercase tracking-[0.3em] text-black shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="relative z-10">Get Started</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          </button>
 
-        <button
-          onClick={() => router.push("/login")}
-          className="mt-4 w-full rounded-[22px] border border-[#344f2e]/30 bg-white/90 px-6 py-4 text-lg font-semibold text-[#344f2e] shadow-[0_14px_30px_-20px_rgba(35,42,35,0.8)] transition-colors hover:bg-white"
-        >
-          Log In
-        </button>
+          <button
+            onClick={() => router.push("/login")}
+            className="h-14 w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] text-[10px] font-black uppercase tracking-[0.3em] text-white/60 transition-all hover:text-white hover:bg-white/[0.06]"
+          >
+            Login
+          </button>
+        </div>
       </div>
-      <style jsx>{`
-        .auth-tile {
-          border-radius: 28px;
-          min-height: 122px;
-          padding: 12px 8px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 16px 30px -22px rgba(47, 42, 35, 0.55);
-          animation-name: tileDrift;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          transform-origin: center;
-          will-change: transform;
-        }
 
-        @keyframes tileDrift {
-          0% {
-            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-          }
-          25% {
-            transform: translate3d(0, -8px, 0) rotate(-0.8deg) scale(1.01);
-          }
-          50% {
-            transform: translate3d(0, 2px, 0) rotate(0.9deg) scale(1);
-          }
-          75% {
-            transform: translate3d(0, -6px, 0) rotate(-0.5deg) scale(1.01);
-          }
-          100% {
-            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-          }
-        }
-      `}</style>
-    </div>
+      <style jsx>{`
+                .auth-tile {
+                    animation-name: tileDrift;
+                    animation-timing-function: ease-in-out;
+                    animation-iteration-count: infinite;
+                }
+
+                @keyframes tileDrift {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-6px) rotate(1deg); }
+                }
+            `}</style>
+    </AuthShell>
   );
 }

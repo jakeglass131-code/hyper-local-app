@@ -12,7 +12,7 @@ import {
   Store,
   Wallet,
 } from "lucide-react";
-import { WebsiteShell } from "@/components/website/WebsiteShell";
+import { BusinessShell } from "@/components/website/BusinessShell";
 import WebsiteScrollReveal from "@/components/website/WebsiteScrollReveal";
 
 const outcomes = [
@@ -110,27 +110,27 @@ const faqs = [
 
 export default function BusinessesPage() {
   return (
-    <WebsiteShell>
+    <BusinessShell>
       <WebsiteScrollReveal>
         <section className="relative overflow-hidden rounded-3xl border border-[#dbe3db] bg-gradient-to-br from-[#eef7f3] via-[#f5fbf8] to-[#eaf4ef] p-8 sm:p-10">
-          <div className="website-orb-fast absolute -left-16 -top-16 h-56 w-56 rounded-full bg-[#3744D2]/15 blur-3xl" />
-          <div className="website-orb-slow absolute -right-24 -bottom-20 h-72 w-72 rounded-full bg-[#3744D2]/12 blur-3xl" />
+          <div className="website-orb-fast absolute -left-16 -top-16 h-56 w-56 rounded-full bg-[#008A5E]/15 blur-3xl" />
+          <div className="website-orb-slow absolute -right-24 -bottom-20 h-72 w-72 rounded-full bg-[#008A5E]/12 blur-3xl" />
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#3744D2]">
+              <p className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#008A5E]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Business Growth Platform
               </p>
               <h1 className="mt-4 text-4xl font-bold leading-tight text-[#1f2a2a] sm:text-5xl">
                 Turn local attention into
-                <span className="text-[#3744D2]"> measurable revenue.</span>
+                <span className="text-[#008A5E]"> measurable revenue.</span>
               </h1>
               <p className="mt-4 max-w-2xl text-base text-[#4d5d58] sm:text-lg">
                 Hyper Local helps businesses acquire nearby customers, control discount spend, and prove campaign ROI
                 with scanner-verified redemptions.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/provider/onboarding" className="rounded-xl bg-[#3744D2] px-4 py-2.5 text-sm font-semibold text-white">
+                <Link href="/provider/onboarding" className="rounded-xl bg-[#008A5E] px-4 py-2.5 text-sm font-semibold text-white">
                   Start business onboarding
                 </Link>
                 <Link href="/how-it-works" className="rounded-xl border border-[#d6dfd8] bg-white px-4 py-2.5 text-sm font-semibold text-[#1f2a2a]">
@@ -140,7 +140,7 @@ export default function BusinessesPage() {
             </div>
 
             <div className="rounded-2xl border border-[#d6e4dc] bg-white/90 p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#3744D2]">Typical first 30 days</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#008A5E]">Typical first 30 days</p>
               <div className="mt-4 space-y-3">
                 <MetricRow label="Offer launch time" value="< 1 day" />
                 <MetricRow label="Redemption verification" value="Scanner + token" />
@@ -156,7 +156,7 @@ export default function BusinessesPage() {
         <section className="grid gap-4 md:grid-cols-3">
           {outcomes.map((outcome) => (
             <article key={outcome.title} className="rounded-2xl border border-[#dfe5df] bg-white p-5 shadow-sm">
-              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#3744D2]">
+              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#008A5E]">
                 {outcome.icon}
                 Outcome
               </p>
@@ -171,7 +171,7 @@ export default function BusinessesPage() {
         <section className="rounded-2xl border border-[#dfe5df] bg-white p-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-bold text-[#1f2a2a]">Everything your team needs to run offers well</h2>
-            <Link href="/provider/onboarding" className="hidden items-center gap-1 text-sm font-semibold text-[#3744D2] sm:inline-flex">
+            <Link href="/provider/onboarding" className="hidden items-center gap-1 text-sm font-semibold text-[#008A5E] sm:inline-flex">
               Get started
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -179,7 +179,7 @@ export default function BusinessesPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {capabilityGrid.map((item) => (
               <article key={item.title} className="rounded-xl border border-[#e4e8e4] bg-[#fbfcfb] p-4">
-                <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#3744D2]">
+                <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#008A5E]">
                   {item.icon}
                   Capability
                 </p>
@@ -197,7 +197,7 @@ export default function BusinessesPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {rollout.map((item) => (
               <article key={item.step} className="rounded-xl border border-[#e4e8e4] p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#3744D2]">{item.step}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#008A5E]">{item.step}</p>
                 <h3 className="mt-2 text-base font-semibold text-[#1f2a2a]">{item.title}</h3>
                 <p className="mt-1 text-sm text-[#5f6d68]">{item.body}</p>
               </article>
@@ -221,7 +221,7 @@ export default function BusinessesPage() {
       </WebsiteScrollReveal>
 
       <WebsiteScrollReveal delayMs={190} className="mt-8" variant="pop">
-        <section className="rounded-2xl border border-[#3744D2]/20 bg-[#3744D2] p-6 text-white">
+        <section className="rounded-2xl border border-[#008A5E]/20 bg-[#008A5E] p-6 text-white">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-bold">Ready to run your first local growth loop?</h2>
@@ -230,7 +230,7 @@ export default function BusinessesPage() {
             <div className="flex gap-2">
               <Link
                 href="/provider/onboarding"
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#3744D2]"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#008A5E]"
               >
                 Register business
                 <ArrowRight className="h-4 w-4" />
@@ -246,7 +246,7 @@ export default function BusinessesPage() {
           </div>
         </section>
       </WebsiteScrollReveal>
-    </WebsiteShell>
+    </BusinessShell>
   );
 }
 

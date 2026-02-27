@@ -176,7 +176,7 @@ const businessJourneySteps: JourneyStep[] = [
       <div className="relative h-48 w-full overflow-hidden rounded-2xl border border-[#dce7e0] bg-[#f4f8ff] p-4">
         <div className="grid h-full grid-cols-[1.2fr_0.8fr] gap-3">
           <div className="rounded-xl border border-[#d5dcff] bg-white p-3">
-            <p className="text-[9px] font-black uppercase tracking-widest text-[#3744D2]">Offer Builder</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#008A5E]">Offer Builder</p>
             <div className="mt-3 space-y-2">
               <div className="h-2 w-4/5 rounded-full bg-slate-100" />
               <div className="h-2 w-full rounded-full bg-slate-100" />
@@ -189,8 +189,8 @@ const businessJourneySteps: JourneyStep[] = [
           </div>
           <div className="rounded-xl border border-[#d5dcff] bg-white p-3 flex flex-col justify-between">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Preview</p>
-            <div className="rounded-lg bg-[#3744D2]/10 p-2 text-[8px] font-black text-[#3744D2]">25% OFF Lunch</div>
-            <button className="rounded-lg bg-[#3744D2] py-1.5 text-[9px] font-black text-white">Go Live</button>
+            <div className="rounded-lg bg-[#008A5E]/10 p-2 text-[8px] font-black text-[#008A5E]">25% OFF Lunch</div>
+            <button className="rounded-lg bg-[#008A5E] py-1.5 text-[9px] font-black text-white">Go Live</button>
           </div>
         </div>
       </div>
@@ -208,17 +208,17 @@ const businessJourneySteps: JourneyStep[] = [
       <div className="relative h-48 w-full overflow-hidden rounded-2xl border border-[#dce7e0] bg-[#eef8f4]">
         <div
           className="absolute inset-0 opacity-[0.12]"
-          style={{ backgroundImage: "radial-gradient(#3744D2 1px, transparent 1px)", backgroundSize: "18px 18px" }}
+          style={{ backgroundImage: "radial-gradient(#008A5E 1px, transparent 1px)", backgroundSize: "18px 18px" }}
         />
-        <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#3744D2]/30" />
-        <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#3744D2]/40 animate-pulse" />
-        <div className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-[#3744D2] shadow-lg">
+        <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#008A5E]/30" />
+        <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#008A5E]/40 animate-pulse" />
+        <div className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-[#008A5E] shadow-lg">
           <Store className="h-6 w-6 text-white" />
         </div>
         <div className="absolute left-8 top-8 h-3 w-3 rounded-full bg-green-500 animate-bounce" />
         <div className="absolute bottom-10 right-12 h-3 w-3 rounded-full bg-green-500 animate-bounce [animation-delay:250ms]" />
         <div className="absolute right-20 top-14 h-3 w-3 rounded-full bg-green-500 animate-bounce [animation-delay:450ms]" />
-        <div className="absolute left-4 top-4 z-10 rounded-full border border-[#d6e4dc] bg-white/95 px-2 py-1 text-[8px] font-black text-[#3744D2] shadow-sm">
+        <div className="absolute left-4 top-4 z-10 rounded-full border border-[#d6e4dc] bg-white/95 px-2 py-1 text-[8px] font-black text-[#008A5E] shadow-sm">
           Auto-target active • 2km radius
         </div>
       </div>
@@ -270,7 +270,7 @@ const businessJourneySteps: JourneyStep[] = [
         <div className="flex items-center gap-6">
           <div className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
             <QrCode className="h-16 w-16 text-[#1f2a2a]" />
-            <div className="absolute inset-x-3 top-4 h-0.5 animate-[scan_2s_ease-in-out_infinite] bg-[#3744D2]" />
+            <div className="absolute inset-x-3 top-4 h-0.5 animate-[scan_2s_ease-in-out_infinite] bg-[#008A5E]" />
           </div>
           <div className="h-14 w-px bg-slate-200" />
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
@@ -297,14 +297,14 @@ const businessJourneySteps: JourneyStep[] = [
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Conversion Trend</p>
             <div className="mt-3 flex h-20 items-end gap-1.5">
               {[35, 48, 44, 58, 66, 62, 74].map((h, i) => (
-                <div key={i} className="flex-1 rounded-t-md bg-[#3744D2]/80" style={{ height: `${h}%` }} />
+                <div key={i} className="flex-1 rounded-t-md bg-[#008A5E]/80" style={{ height: `${h}%` }} />
               ))}
             </div>
           </div>
           <div className="rounded-xl border border-[#d5dcff] bg-white p-3 flex flex-col justify-between">
             <div>
               <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">ROI</p>
-              <p className="text-2xl font-black text-[#3744D2]">4.2x</p>
+              <p className="text-2xl font-black text-[#008A5E]">4.2x</p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[8px] font-black text-slate-600">Best window: 12pm-2pm</div>
           </div>
@@ -316,10 +316,11 @@ const businessJourneySteps: JourneyStep[] = [
 
 export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "consumer" | "business" }) {
   const [activeStep, setActiveStep] = useState(0);
+  const isBusiness = audience === "business";
 
-  const steps = audience === "business" ? businessJourneySteps : consumerJourneySteps;
-  const heading = audience === "business" ? "Launch offers. Track real revenue." : "From Discovery to Saving.";
-  const sectionLabel = audience === "business" ? "Merchant Workflow" : "The Experience";
+  const steps = isBusiness ? businessJourneySteps : consumerJourneySteps;
+  const heading = isBusiness ? "Launch offers. Track real revenue." : "From Discovery to Saving.";
+  const sectionLabel = isBusiness ? "Merchant Workflow" : "The Experience";
   const stageLabel = "Stage";
 
   const next = () => setActiveStep((prev) => (prev + 1) % steps.length);
@@ -332,7 +333,7 @@ export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "c
     <section className="relative overflow-hidden rounded-[2.5rem] border border-[#dbe3db] bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-10">
       <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.4em] text-[#3744D2]">{sectionLabel}</p>
+          <p className={cn("mb-2 text-[10px] font-black uppercase tracking-[0.4em]", isBusiness ? "text-[#008A5E]" : "text-[#3744D2]")}>{sectionLabel}</p>
           <h2 className="text-4xl font-black leading-none tracking-tighter text-[#1f2a2a]">{heading}</h2>
         </div>
 
@@ -343,7 +344,11 @@ export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "c
               onClick={() => setActiveStep(i)}
               className={cn(
                 "h-2.5 w-10 rounded-full transition-all duration-500",
-                activeStep === i ? "bg-[#3744D2] shadow-lg shadow-[#3744D2]/20" : "bg-gray-200 hover:bg-gray-300"
+                activeStep === i
+                  ? isBusiness
+                    ? "bg-[#008A5E] shadow-lg shadow-[#008A5E]/20"
+                    : "bg-[#3744D2] shadow-lg shadow-[#3744D2]/20"
+                  : "bg-gray-200 hover:bg-gray-300"
               )}
             />
           ))}
@@ -352,7 +357,7 @@ export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "c
 
       <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div className="relative aspect-video overflow-hidden rounded-[2.5rem] border border-gray-100 bg-[#fbfcfb] p-3 lg:aspect-square xl:aspect-video">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#f0f9f6] to-white opacity-50" />
+          <div className={cn("absolute inset-0 opacity-50", isBusiness ? "bg-gradient-to-br from-[#f0f9f6] to-white" : "bg-gradient-to-br from-[#f3f5ff] to-white")} />
           <div className="relative flex h-full w-full flex-col items-center justify-center rounded-[2rem] border border-gray-50 bg-white p-8 shadow-sm">
             <div className="w-full">{active.visual}</div>
 
@@ -379,24 +384,24 @@ export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "c
 
         <div className="flex flex-col justify-center">
           <div key={activeStep} className="animate-in fade-in slide-in-from-right-10 duration-700">
-            <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-[#3744D2]/10 text-[#3744D2] shadow-inner">
+            <div className={cn("mb-8 flex h-16 w-16 items-center justify-center rounded-[1.5rem] shadow-inner", isBusiness ? "bg-[#008A5E]/10 text-[#008A5E]" : "bg-[#3744D2]/10 text-[#3744D2]")}>
               <ActiveIcon className="h-8 w-8" />
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#3744D2]">{stageLabel} {activeStep + 1}</h3>
+              <h3 className={cn("text-xs font-black uppercase tracking-[0.3em]", isBusiness ? "text-[#008A5E]" : "text-[#3744D2]")}>{stageLabel} {activeStep + 1}</h3>
               <h2 className="text-5xl font-black leading-[0.9] tracking-tighter text-[#1f2a2a]">{active.title}</h2>
               <p className="text-2xl font-bold leading-tight tracking-tight text-[#1f2a2a]/60">{active.desc}</p>
-              <div className="h-1.5 w-24 rounded-full bg-[#3744D2]" />
+              <div className={cn("h-1.5 w-24 rounded-full", isBusiness ? "bg-[#008A5E]" : "bg-[#3744D2]")} />
               <p className="pt-4 text-xl font-medium leading-relaxed text-[#5f6d68]">{active.details}</p>
             </div>
           </div>
 
           <div className="mt-12">
-            <div className="group rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-colors hover:border-[#3744D2]/20">
+            <div className={cn("group rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-colors", isBusiness ? "hover:border-[#008A5E]/20" : "hover:border-[#3744D2]/20")}>
               <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Benefit</p>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#3744D2]" />
+                <Sparkles className={cn("h-4 w-4", isBusiness ? "text-[#008A5E]" : "text-[#3744D2]")} />
                 <p className="text-[13px] font-black text-[#1f2a2a]">{active.benefit}</p>
               </div>
             </div>
@@ -404,8 +409,8 @@ export function HowItWorksFlowDiagram({ audience = "consumer" }: { audience?: "c
         </div>
       </div>
 
-      <div className="-z-10 absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-green-50 opacity-50 blur-[100px]" />
-      <div className="-z-10 absolute -left-20 -top-20 h-64 w-64 rounded-full bg-green-50 opacity-50 blur-[100px]" />
+      <div className={cn("-z-10 absolute -bottom-20 -right-20 h-64 w-64 rounded-full opacity-50 blur-[100px]", isBusiness ? "bg-green-50" : "bg-indigo-50")} />
+      <div className={cn("-z-10 absolute -left-20 -top-20 h-64 w-64 rounded-full opacity-50 blur-[100px]", isBusiness ? "bg-green-50" : "bg-indigo-50")} />
     </section>
   );
 }

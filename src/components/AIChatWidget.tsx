@@ -9,22 +9,20 @@ type Message = {
     id: string;
     text: string;
     sender: "user" | "ai";
-    timestamp: number;
 };
 
 export function AIChatWidget() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const messageCounterRef = useRef(1);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "welcome",
             text: "Greetings! 🧠 I'm your HyperLocal Genius. I've analyzed all 42 active deals in your vicinity. What are you in the mood for?",
             sender: "ai",
-            timestamp: Date.now(),
         },
     ]);
     const [inputValue, setInputValue] = useState("");
-    const [mounted, setMounted] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -33,12 +31,23 @@ export function AIChatWidget() {
     };
 
     useEffect(() => {
-        setMounted(true);
         scrollToBottom();
     }, [messages, isTyping, isOpen]);
 
-    // Don't show on business dashboard
-    if (pathname?.startsWith("/business")) {
+    const websiteRoutes = [
+        "/",
+        "/for-consumers",
+        "/for-businesses",
+        "/how-it-works",
+        "/terms",
+        "/privacy",
+        "/contact",
+    ];
+
+    const showOnWebsite = websiteRoutes.some((route) => pathname === route || pathname?.startsWith(`${route}/`));
+
+    // Keep widget scoped to public website pages only.
+    if (!showOnWebsite) {
         return null;
     }
 
@@ -46,11 +55,11 @@ export function AIChatWidget() {
         e?.preventDefault();
         if (!inputValue.trim()) return;
 
+        const nextMessageId = `${messageCounterRef.current++}`;
         const userMsg: Message = {
-            id: Date.now().toString(),
+            id: `user-${nextMessageId}`,
             text: inputValue,
             sender: "user",
-            timestamp: Date.now(),
         };
 
         setMessages((prev) => [...prev, userMsg]);
@@ -60,11 +69,11 @@ export function AIChatWidget() {
         // Simulate AI thinking and response
         setTimeout(() => {
             const responseText = generateResponse(userMsg.text);
+            const responseId = `${messageCounterRef.current++}`;
             const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
+                id: `ai-${responseId}`,
                 text: responseText,
                 sender: "ai",
-                timestamp: Date.now(),
             };
             setMessages((prev) => [...prev, aiMsg]);
             setIsTyping(false);
@@ -100,7 +109,7 @@ export function AIChatWidget() {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "fixed bottom-24 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2",
+                    "fixed bottom-6 right-6 z-30 hidden h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 md:flex",
                     isOpen ? "bg-red-500 hover:bg-red-600" : "bg-brand hover:bg-brand-dark"
                 )}
             >
@@ -120,7 +129,7 @@ export function AIChatWidget() {
             {/* Chat Window - Lower z-index */}
             <div
                 className={cn(
-                    "fixed bottom-40 right-6 z-30 w-[350px] overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-gray-200 dark:border-neutral-800 transition-all duration-300 origin-bottom-right",
+                    "fixed bottom-24 right-6 z-30 hidden w-[350px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 origin-bottom-right dark:border-neutral-800 dark:bg-neutral-900 md:block",
                     isOpen
                         ? "scale-100 opacity-100 translate-y-0"
                         : "scale-95 opacity-0 translate-y-10 pointer-events-none"
@@ -155,12 +164,6 @@ export function AIChatWidget() {
                             )}
                         >
                             {msg.text}
-                            <span className={cn(
-                                "text-[10px] opacity-70",
-                                msg.sender === "user" ? "text-brand-light" : "text-gray-400"
-                            )}>
-                                {mounted ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-                            </span>
                         </div>
                     ))}
 

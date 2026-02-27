@@ -45,13 +45,13 @@ export default function ProviderOffersPage() {
             <div className="min-h-screen pb-28 pt-6">
                 <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Campaign Studio</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008A5E]">Campaign Studio</p>
                         <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Offers Command Center</h1>
                         <p className="mt-1 text-sm text-slate-600">Build, launch, and monitor every promotion from one place.</p>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#3744D2] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/25"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#008A5E] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#008A5E]/25"
                     >
                         <PlusCircle className="h-4 w-4" />
                         Create New Offer
@@ -69,20 +69,20 @@ export default function ProviderOffersPage() {
                     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-3">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Offer Workflows</h2>
-                            <Sparkles className="h-4 w-4 text-[#3744D2]" />
+                            <Sparkles className="h-4 w-4 text-[#008A5E]" />
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2">
                             <button
                                 onClick={() => setShowCreateModal(true)}
-                                className="rounded-2xl border border-[#3744D2]/20 bg-[#3744D2]/5 p-4 text-left transition hover:border-[#3744D2]/40"
+                                className="rounded-2xl border border-[#008A5E]/20 bg-[#008A5E]/5 p-4 text-left transition hover:border-[#008A5E]/40"
                             >
                                 <p className="text-sm font-bold text-slate-900">Launch new campaign</p>
                                 <p className="mt-1 text-sm text-slate-600">Set inventory, geofence, and duration in guided steps.</p>
                             </button>
                             <button
                                 onClick={() => setShowCurrentModal(true)}
-                                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#3744D2]/30"
+                                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#008A5E]/30"
                             >
                                 <p className="text-sm font-bold text-slate-900">Manage current offers</p>
                                 <p className="mt-1 text-sm text-slate-600">Pause, activate, or remove live campaigns quickly.</p>
@@ -122,7 +122,7 @@ export default function ProviderOffersPage() {
                             <article key={template.name} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                                 <p className="text-sm font-bold text-slate-900">{template.name}</p>
                                 <p className="mt-1 text-sm text-slate-600">{template.detail}</p>
-                                <p className="mt-2 text-xs font-bold uppercase tracking-widest text-[#3744D2]">{template.uplift}</p>
+                                <p className="mt-2 text-xs font-bold uppercase tracking-widest text-[#008A5E]">{template.uplift}</p>
                             </article>
                         ))}
                     </div>
@@ -138,7 +138,7 @@ export default function ProviderOffersPage() {
 function SnapshotCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
     return (
         <article className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 inline-flex rounded-lg bg-[#3744D2]/10 p-2 text-[#3744D2]">{icon}</div>
+            <div className="mb-2 inline-flex rounded-lg bg-[#008A5E]/10 p-2 text-[#008A5E]">{icon}</div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
             <p className="mt-1 text-2xl font-black tracking-tight text-slate-900">{value}</p>
         </article>
@@ -152,7 +152,7 @@ function PlannerRow({ day, window, status }: { day: string; window: string; stat
                 <p className="text-sm font-bold text-slate-900">{status}</p>
                 <p className="text-xs text-slate-500">{window}</p>
             </div>
-            <span className="rounded-full bg-[#3744D2]/10 px-2 py-0.5 text-xs font-bold text-[#3744D2]">{day}</span>
+            <span className="rounded-full bg-[#008A5E]/10 px-2 py-0.5 text-xs font-bold text-[#008A5E]">{day}</span>
         </div>
     );
 }

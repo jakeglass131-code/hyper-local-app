@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe2 } from "lucide-react";
+import { Globe2, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -18,6 +19,7 @@ function isActive(pathname: string, href: string) {
 
 export function WebsiteHeader() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isBusinessContext = pathname.startsWith("/for-businesses") || pathname.startsWith("/business");
   const openAppHref = isBusinessContext ? "/provider/home" : "/consumer/home";
   const openAppLabel = isBusinessContext ? "Open Merchant App" : "Open App";
@@ -52,6 +54,14 @@ export function WebsiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d6dfd8] bg-white text-[#3744D2] sm:hidden"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
           <Link
             href={openAppHref}
             className="hidden items-center gap-2 rounded-xl bg-[#3744D2]/10 px-4 py-2 text-sm font-bold text-[#3744D2] hover:bg-[#3744D2]/20 sm:inline-flex"
@@ -72,6 +82,43 @@ export function WebsiteHeader() {
           </Link>
         </div>
       </div>
+
+      {mobileMenuOpen ? (
+        <div className="border-t border-[#e3e9e4] bg-white px-4 py-3 sm:hidden">
+          <div className="flex flex-col gap-2">
+            {navItems.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm font-semibold",
+                    active ? "bg-[#3744D2]/10 text-[#3744D2]" : "text-[#4d5d58] hover:bg-[#f4f8f5]"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            <Link
+              href="/business"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg border border-[#d6dfd8] bg-white px-3 py-2 text-sm font-semibold text-[#3744D2]"
+            >
+              For Businesses
+            </Link>
+            <Link
+              href={openAppHref}
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg bg-[#3744D2]/10 px-3 py-2 text-sm font-semibold text-[#3744D2]"
+            >
+              {openAppLabel}
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

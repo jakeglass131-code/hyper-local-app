@@ -60,23 +60,23 @@ export default function ProviderHomePage() {
         <div className="min-h-screen pb-28 pt-6">
             <header className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">Provider Console</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008A5E]">Provider Console</p>
                     <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Main Street Coffee</h1>
-                    <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#3744D2]/20 bg-[#3744D2]/5 px-3 py-1 text-xs font-semibold text-[#3744D2]">
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#008A5E]/20 bg-[#008A5E]/5 px-3 py-1 text-xs font-semibold text-[#008A5E]">
                         <BadgeCheck className="h-3.5 w-3.5" />
                         Open now • 4 campaigns active
                     </div>
                 </div>
                 <button
                     onClick={() => router.push("/provider/analytics")}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-[#3744D2]/40 hover:text-[#3744D2]"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-[#008A5E]/40 hover:text-[#008A5E]"
                 >
                     <BarChart3 className="h-4 w-4" />
                     Deep Analytics
                 </button>
             </header>
 
-            <section className="mb-6 overflow-hidden rounded-3xl border border-[#3744D2]/15 bg-gradient-to-r from-[#3744D2] to-[#4B58E4] p-6 text-white shadow-xl shadow-[#3744D2]/20">
+            <section className="mb-6 overflow-hidden rounded-3xl border border-[#008A5E]/15 bg-gradient-to-r from-[#008A5E] to-[#10b981] p-6 text-white shadow-xl shadow-[#008A5E]/20">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="max-w-2xl">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">Recommended Move</p>
@@ -87,7 +87,7 @@ export default function ProviderHomePage() {
                     </div>
                     <button
                         onClick={() => router.push("/provider/offers")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#3744D2] hover:bg-slate-100"
+                        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#008A5E] hover:bg-slate-100"
                     >
                         Launch Offer
                         <ArrowRight className="h-4 w-4" />
@@ -129,7 +129,7 @@ export default function ProviderHomePage() {
                 <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-3">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Priority Action Queue</h3>
-                        <Sparkles className="h-4 w-4 text-[#3744D2]" />
+                        <Sparkles className="h-4 w-4 text-[#008A5E]" />
                     </div>
                     <div className="mt-4 space-y-3">
                         {actionQueue.map((item) => (
@@ -138,10 +138,10 @@ export default function ProviderHomePage() {
                                     <p className="text-sm font-bold text-slate-900">{item.title}</p>
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${item.priority === "High"
-                                                ? "bg-rose-100 text-rose-700"
-                                                : item.priority === "Medium"
-                                                    ? "bg-amber-100 text-amber-700"
-                                                    : "bg-slate-200 text-slate-700"
+                                            ? "bg-rose-100 text-rose-700"
+                                            : item.priority === "Medium"
+                                                ? "bg-amber-100 text-amber-700"
+                                                : "bg-slate-200 text-slate-700"
                                             }`}
                                     >
                                         {item.priority}
@@ -171,7 +171,7 @@ export default function ProviderHomePage() {
                             <p className="text-sm font-semibold text-slate-900">Prepare staff for 12:00-2:00 PM peak</p>
                             <p className="mt-1 text-xs text-slate-500">Average claim-to-arrival window is currently 7 minutes.</p>
                         </div>
-                        <div className="rounded-2xl border border-[#3744D2]/20 bg-[#3744D2]/5 p-3">
+                        <div className="rounded-2xl border border-[#008A5E]/20 bg-[#008A5E]/5 p-3">
                             <p className="text-sm font-semibold text-slate-900">Goal: +10% redemption lift this week</p>
                             <p className="mt-1 text-xs text-slate-600">Use one lunch campaign and one after-work campaign with capped inventory.</p>
                         </div>
@@ -208,7 +208,7 @@ function MetricCard({
 }) {
     return (
         <article className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 inline-flex rounded-lg bg-[#3744D2]/10 p-2 text-[#3744D2]">{icon}</div>
+            <div className="mb-2 inline-flex rounded-lg bg-[#008A5E]/10 p-2 text-[#008A5E]">{icon}</div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
             <p className="mt-1 text-2xl font-black tracking-tight text-slate-900">{value}</p>
             <p className="mt-1 text-xs text-slate-500">{note}</p>
@@ -225,7 +225,7 @@ function FunnelRow({ label, value, caption }: { label: string; value: number; ca
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#3744D2] to-[#6F78E8]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#008A5E] to-[#34d399]"
                     style={{ width: `${Math.min(value, 100)}%` }}
                 />
             </div>
@@ -238,10 +238,10 @@ function SegmentRow({ label, conversion, share }: { label: string; conversion: n
         <div>
             <div className="mb-1 flex items-center justify-between gap-3 text-sm">
                 <p className="font-semibold text-slate-800">{label}</p>
-                <p className="font-bold text-[#3744D2]">{conversion}%</p>
+                <p className="font-bold text-[#008A5E]">{conversion}%</p>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-[#3744D2]/80" style={{ width: `${share}%` }} />
+                <div className="h-full rounded-full bg-[#008A5E]/80" style={{ width: `${share}%` }} />
             </div>
         </div>
     );
@@ -251,7 +251,7 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: React.Reac
     return (
         <button
             onClick={onClick}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-[#3744D2]/40 hover:text-[#3744D2]"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-[#008A5E]/40 hover:text-[#008A5E]"
         >
             {icon}
             {label}

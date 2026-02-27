@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BellRing,
   CheckCircle2,
+  CircleHelp,
   Download,
   Heart,
   MapPinned,
@@ -150,6 +151,30 @@ export default function WebsiteHome() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      </WebsiteScrollReveal>
+
+      <WebsiteScrollReveal delayMs={340} className="mt-12" variant="pop">
+        <section className="rounded-[2.5rem] border border-[#dfe5df] bg-white p-8 sm:p-12">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#3744D2]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#3744D2]">
+                <CircleHelp className="h-3.5 w-3.5" />
+                Contact us
+              </p>
+              <h2 className="mt-4 text-3xl font-black tracking-tight text-[#1f2a2a]">Need help or want to partner?</h2>
+              <p className="mt-2 max-w-2xl text-sm text-[#5f6d68] sm:text-base">
+                Reach support for account issues, merchant onboarding, and local partnership requests.
+              </p>
+            </div>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#3744D2] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#3744D2]/20 hover:bg-[#2e38ad]"
+            >
+              Open Contact Form
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </WebsiteScrollReveal>
