@@ -3,7 +3,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Heart, MapPin, Sparkles, Tag } from "lucide-react";
+import { Bookmark, Clock, MapPin, Tag } from "lucide-react";
 import { ScrollReveal } from "@/components/consumer/ScrollReveal";
 import {
   EmptyStateCard,
@@ -13,138 +13,174 @@ import {
   getExpiryLabel,
   useOffersData,
 } from "@/components/consumer/offers/shared";
+import { Offer } from "@/lib/store";
+
+const EXPIRED_VISIBLE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export default function FavouriteOffersPage() {
   const router = useRouter();
   const { favOffers, toggleFavourite, loading } = useOffersData();
 
-  const expiringSoon = useMemo(
-    () =>
-      favOffers.filter((offer) => {
-        const expiryLabel = getExpiryLabel(offer);
-        return expiryLabel.startsWith("Ends in") && expiryLabel.endsWith("h");
-      }).length,
-    [favOffers]
-  );
+  const { activeSavedOffers, expiredSavedOffers } = useMemo(() => {
+    const now = Date.now();
+
+    return favOffers.reduce(
+      (acc, offer) => {
+        const endsAt = offer.endsAt ?? 0;
+
+        if (endsAt > now) {
+          acc.activeSavedOffers.push(offer);
+          return acc;
+        }
+
+        if (endsAt > now - EXPIRED_VISIBLE_WINDOW_MS) {
+          acc.expiredSavedOffers.push(offer);
+        }
+
+        return acc;
+      },
+      { activeSavedOffers: [] as Offer[], expiredSavedOffers: [] as Offer[] }
+    );
+  }, [favOffers]);
+
+  const hasVisibleSavedOffers = activeSavedOffers.length > 0 || expiredSavedOffers.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#f6f8f5] pb-24">
+    <div className="min-h-screen bg-[#f2f2f7] pb-24 font-sans text-gray-900">
       <OffersHeader
-        title="Favourite Offers"
-        subtitle="Your saved deals, organized so you can quickly act on what expires first."
+        title="Saved Offers"
+        subtitle="Your saved deals. Expired items stay visible for 24 hours, then auto-hide."
       />
 
-      <main className="space-y-4 px-4 py-5">
-        <ScrollReveal className="grid grid-cols-1 gap-3 sm:grid-cols-3" variant="pop">
-          <MetricCard label="Saved offers" value={favOffers.length} tone="text-[#3744D2]" />
-          <MetricCard label="Expiring in 24h" value={expiringSoon} tone="text-[#dc2626]" />
-          <MetricCard label="Ready to redeem" value={Math.max(0, favOffers.length - expiringSoon)} tone="text-[#3744d2]" />
+      <main className="space-y-6 px-4 py-5">
+        <ScrollReveal className="grid grid-cols-1 gap-3" variant="pop">
+          <MetricCard label="Active saved" value={activeSavedOffers.length} tone="text-gray-900" />
         </ScrollReveal>
-
-        <ScrollReveal delayMs={80}>
-          <section className="rounded-2xl border border-[#dfe4df] bg-white p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-[#fff4e9] p-2 text-[#9a5800]">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#1f2937]">Plan smarter</p>
-                <p className="mt-1 text-sm text-[#61706a]">
-                  Focus on the deals expiring soon first, then use map view to group nearby redemptions.
-                </p>
-              </div>
-            </div>
-          </section>
-        </ScrollReveal>
-
         {loading ? (
           <section className="space-y-3">
             {[0, 1, 2].map((item) => (
-              <div
-                key={item}
-                className="h-28 animate-pulse rounded-2xl border border-[#e3e8e3] bg-white/80"
-              />
+              <div key={item} className="h-32 animate-pulse rounded-[2rem] border border-gray-100 bg-white shadow-sm" />
             ))}
           </section>
-        ) : favOffers.length === 0 ? (
+        ) : !hasVisibleSavedOffers ? (
           <ScrollReveal>
             <EmptyStateCard
-              title="No favourite offers yet"
-              body="Tap the heart next to any offer to save it here for quick access later."
+              title="No saved offers yet"
+              body="Tap the bookmark on a home offer card to save it here."
               ctaLabel="Browse map offers"
               onClick={() => router.push("/consumer/map")}
             />
           </ScrollReveal>
         ) : (
-          <section className="space-y-3">
-            {favOffers.map((offer, index) => {
-              const business = getBusinessById(offer.businessId);
-              if (!business) return null;
+          <>
+            {activeSavedOffers.length > 0 && (
+              <section className="space-y-3">
+                <p className="px-1 text-xs font-black uppercase tracking-[0.16em] text-[#62726c]">Active Saved Offers</p>
+                {activeSavedOffers.map((offer, index) => (
+                  <SavedOfferCard key={offer.id} offer={offer} index={index} toggleFavourite={toggleFavourite} />
+                ))}
+              </section>
+            )}
 
-              return (
-                <ScrollReveal
-                  key={offer.id}
-                  className="rounded-2xl border border-[#dfe4df] bg-white p-4 shadow-[0_2px_6px_rgba(16,24,40,0.06)]"
-                  delayMs={index * 70}
-                  variant="pop"
-                >
-                  <article className="flex items-start gap-3">
-                    <img src={business.image} alt={business.name} className="h-14 w-14 rounded-xl object-cover" />
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="line-clamp-1 text-base font-semibold text-[#1f2937]">{offer.title}</h3>
-                          <p className="line-clamp-1 text-sm text-[#5f6b66]">{business.name}</p>
-                        </div>
-
-                        <button
-                          onClick={() => toggleFavourite(offer.id)}
-                          className="rounded-full p-2 text-[#ea5a65] hover:bg-[#fff1f3]"
-                          aria-label={`Remove ${offer.title} from favourites`}
-                        >
-                          <Heart className="h-4 w-4 fill-[#ea5a65]" />
-                        </button>
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#6b7280]">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-0.5">
-                          <Tag className="h-3 w-3" />
-                          {getDiscountLabel(offer)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {getExpiryLabel(offer)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {business.address}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() => router.push("/consumer/map")}
-                          className="rounded-lg border border-[#dde3dd] px-3 py-1.5 text-xs font-semibold text-[#4b5a55]"
-                        >
-                          Open map
-                        </button>
-                        <button
-                          onClick={() => router.push("/consumer/reservations")}
-                          className="rounded-lg bg-[#3744D2] px-3 py-1.5 text-xs font-semibold text-white"
-                        >
-                          Go to redeem
-                        </button>
-                      </div>
-                    </div>
-                  </article>
+            {expiredSavedOffers.length >= 0 && (
+              <section className="space-y-3 mt-8">
+                <ScrollReveal className="grid grid-cols-1 gap-3 mb-4" variant="pop">
+                  <MetricCard label="Expired (24h)" value={expiredSavedOffers.length} tone="text-[#9a5800]" />
                 </ScrollReveal>
-              );
-            })}
-          </section>
+
+                {expiredSavedOffers.length > 0 && (
+                  <>
+                    <p className="px-1 text-xs font-black uppercase tracking-[0.16em] text-[#9a5800]">Expired Offers (auto-remove after 24h)</p>
+                    {expiredSavedOffers.map((offer, index) => (
+                      <SavedOfferCard key={offer.id} offer={offer} index={index} toggleFavourite={toggleFavourite} expired />
+                    ))}
+                  </>
+                )}
+              </section>
+            )}
+          </>
         )}
       </main>
     </div>
+  );
+}
+
+function SavedOfferCard({
+  offer,
+  index,
+  toggleFavourite,
+  expired = false,
+}: {
+  offer: Offer;
+  index: number;
+  toggleFavourite: (id: string) => void;
+  expired?: boolean;
+}) {
+  const router = useRouter();
+  const business = getBusinessById(offer.businessId);
+  if (!business) return null;
+
+  return (
+    <ScrollReveal
+      className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm"
+      delayMs={index * 70}
+      variant="pop"
+    >
+      <article className={expired ? "opacity-75" : ""}>
+        <div className="flex items-start gap-3">
+          <img src={business.image} alt={business.name} className="h-16 w-16 rounded-2xl object-cover shadow-sm bg-gray-100 shrink-0" />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="line-clamp-1 text-base font-bold tracking-tight text-gray-900">{offer.title}</h3>
+                <p className="line-clamp-1 text-sm font-medium text-gray-500">{business.name}</p>
+              </div>
+
+              <button
+                onClick={() => toggleFavourite(offer.id)}
+                className="rounded-full p-2.5 text-[#3744D2] hover:bg-[#edf0ff] transition-colors"
+                aria-label={`Remove ${offer.title} from saved offers`}
+              >
+                <Bookmark className="h-4.5 w-4.5 fill-current" />
+              </button>
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-gray-500">
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 px-2 py-1 text-gray-700">
+                <Tag className="h-3 w-3" />
+                {getDiscountLabel(offer)}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 px-2 py-1">
+                <Clock className="h-3 w-3" />
+                {getExpiryLabel(offer)}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 px-2 py-1">
+                <MapPin className="h-3 w-3" />
+                {business.address}
+              </span>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => router.push("/consumer/map")}
+                className="rounded-[1rem] bg-gray-50 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors active:scale-95"
+              >
+                View Map
+              </button>
+              {!expired && (
+                <button
+                  onClick={() => router.push("/consumer/reservations")}
+                  className="rounded-[1rem] bg-black px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-black/10 transition-all active:scale-95"
+                >
+                  Redeem Info
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </article>
+    </ScrollReveal>
   );
 }
 
@@ -158,9 +194,9 @@ function MetricCard({
   tone: string;
 }) {
   return (
-    <article className="rounded-2xl border border-[#dfe4df] bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7280]">{label}</p>
-      <p className={`mt-2 text-2xl font-bold ${tone}`}>{value}</p>
+    <article className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wider text-gray-400">{label}</p>
+      <p className={`text-xl font-black ${tone}`}>{value}</p>
     </article>
   );
 }

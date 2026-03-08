@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Heart, Sparkles, Store, Ticket } from "lucide-react";
+import { Heart, Ticket } from "lucide-react";
 import { LogoHeader } from "@/components/consumer/LogoHeader";
 import { MOCK_BUSINESSES } from "@/lib/mockData";
 import { Offer, Claim } from "@/lib/store";
@@ -22,7 +22,6 @@ type OffersData = {
   claims: Claim[];
   claimOffers: Map<string, Offer>;
   allOffers: Offer[];
-  favBusinesses: typeof MOCK_BUSINESSES;
   favOffers: Offer[];
   totalItems: number;
   totalFavourites: number;
@@ -35,8 +34,7 @@ type OffersData = {
 
 const tabs = [
   { href: "/consumer/reservations", label: "Redeemed", icon: Ticket },
-  { href: "/consumer/reservations/favourite-offers", label: "Favourite Offers", icon: Heart },
-  { href: "/consumer/reservations/favourite-businesses", label: "Favourite Businesses", icon: Store },
+  { href: "/consumer/reservations/favourite-offers", label: "Saved Offers", icon: Heart },
 ];
 
 export function getDiscountLabel(offer: Offer): string {
@@ -46,7 +44,8 @@ export function getDiscountLabel(offer: Offer): string {
 }
 
 export function getExpiryLabel(offer: Offer): string {
-  const msRemaining = offer.endsAt - Date.now();
+  const endsAt = offer.endsAt ?? 0;
+  const msRemaining = endsAt - Date.now();
   if (msRemaining <= 0) return "Expired";
 
   const hoursRemaining = Math.max(1, Math.ceil(msRemaining / (1000 * 60 * 60)));
@@ -64,41 +63,34 @@ export function OffersHeader({ title, subtitle }: HeaderProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[#dfe4df] bg-[#f6f8f5]/95 backdrop-blur">
+    <header className="sticky top-0 z-20 px-4 pt-10 pb-6 bg-[#f2f2f7]/95 backdrop-blur-md border-b border-gray-200/50 flex flex-col gap-6">
       <LogoHeader />
-
-      <div className="space-y-4 px-4 pb-4">
-        <div>
-          <p className="inline-flex items-center gap-1 rounded-full bg-[#eef1ff] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#3744D2]">
-            <Sparkles className="h-3 w-3" />
-            My Offers Hub
-          </p>
-          <h1 className="mt-2 text-[30px] font-bold tracking-tight text-[#1f2937]">{title}</h1>
-          <p className="mt-1 text-sm text-[#60706a]">{subtitle}</p>
-        </div>
-
-        <nav className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {tabs.map((tab) => {
-            const isActive = pathname === tab.href;
-
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={cn(
-                  "inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors",
-                  isActive
-                    ? "border-[#d7dcff] bg-[#eef1ff] text-[#3744D2]"
-                    : "border-[#dde3dd] bg-white text-[#61706a] hover:bg-[#f9fbf9]"
-                )}
-              >
-                <tab.icon className={cn("h-4 w-4", isActive && "stroke-[2.5]")} />
-                {tab.label}
-              </Link>
-            );
-          })}
-        </nav>
+      <div className="flex flex-col gap-2 mt-4">
+        <h1 className="text-3xl font-black tracking-tight text-gray-900">{title}</h1>
+        <p className="text-sm font-medium text-gray-500 leading-relaxed">{subtitle}</p>
       </div>
+
+      <nav className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+        {tabs.map((tab) => {
+          const isActive = pathname === tab.href;
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={cn(
+                "snap-start inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all whitespace-nowrap active:scale-95",
+                isActive
+                  ? "bg-black text-white shadow-md shadow-black/10"
+                  : "bg-white text-gray-500 border border-gray-200/60 hover:border-gray-300"
+              )}
+            >
+              <tab.icon className={cn("h-4 w-4", isActive && "stroke-[2.5]")} />
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }
@@ -115,15 +107,15 @@ export function EmptyStateCard({
   onClick: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-dashed border-[#d0d7d1] bg-white p-8 text-center shadow-sm">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#eef1ff]">
-        <Ticket className="h-7 w-7 text-[#3744D2]" />
+    <section className="bg-white rounded-[2rem] border border-gray-100 p-8 text-center shadow-sm flex flex-col items-center">
+      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
+        <Ticket className="h-8 w-8" />
       </div>
-      <h2 className="text-lg font-semibold text-[#1f2937]">{title}</h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-[#6b7280]">{body}</p>
+      <h2 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
+      <p className="mt-2 max-w-sm text-sm font-medium text-gray-500 leading-relaxed">{body}</p>
       <button
         onClick={onClick}
-        className="mt-5 rounded-xl bg-[#3744D2] px-5 py-2.5 text-sm font-semibold text-white"
+        className="mt-6 rounded-2xl bg-black px-8 py-3.5 text-sm font-bold text-white transition-transform active:scale-95 shadow-md shadow-black/10"
       >
         {ctaLabel}
       </button>
@@ -171,11 +163,6 @@ export function useOffersData(): OffersData {
     fetchClaimsAndOffers();
   }, [fetchClaimsAndOffers]);
 
-  const favBusinesses = useMemo(
-    () => MOCK_BUSINESSES.filter((business) => favourites.includes(business.id)),
-    [favourites]
-  );
-
   const favOfferPool = useMemo(() => {
     const merged = [...allOffers, ...Array.from(claimOffers.values()), ...cartOffers];
     const seen = new Set<string>();
@@ -197,10 +184,9 @@ export function useOffersData(): OffersData {
     claims,
     claimOffers,
     allOffers,
-    favBusinesses,
     favOffers,
     totalItems: cartOffers.length + claims.length,
-    totalFavourites: favBusinesses.length + favOffers.length,
+    totalFavourites: favOffers.length,
     favourites,
     toggleFavourite,
     removeFromCart,

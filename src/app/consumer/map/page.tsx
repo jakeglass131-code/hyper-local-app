@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { LogoHeader } from "@/components/consumer/LogoHeader";
 
 const MapComponent = dynamic(() => import("@/components/consumer/MapComponent"), {
     ssr: false,
@@ -10,7 +9,7 @@ const MapComponent = dynamic(() => import("@/components/consumer/MapComponent"),
 
 export default function MapPage() {
     return (
-        <div className="pb-20">
+        <div className="h-[100dvh] w-full">
             <MapComponent />
         </div>
     );

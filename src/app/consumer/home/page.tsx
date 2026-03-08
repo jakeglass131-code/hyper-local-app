@@ -3,19 +3,16 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
+    Bookmark,
     ChevronDown,
-    Clock3,
-    Heart,
     MapPin,
     Search,
     SlidersHorizontal,
-    Star,
-    Store,
     Upload,
     User,
     X,
 } from "lucide-react";
-import { MOCK_BUSINESSES, CATEGORIES } from "@/lib/mockData";
+import { MOCK_BUSINESSES, CATEGORIES, type Business } from "@/lib/mockData";
 import { useConsumerStore } from "@/store/consumerStore";
 import { cn } from "@/lib/utils";
 import { Offer } from "@/lib/store";
@@ -23,25 +20,71 @@ import { FlyingTicketAnimation } from "@/components/FlyingTicketAnimation";
 import { calculateDistanceAndTime } from "@/lib/displayHelpers";
 
 const userId = "user_123";
-const DISTANCE_OPTIONS = ["500m", "1km", "5km", "10km+"] as const;
-const DEFAULT_DISTANCE = "10km+" as const;
+const DEFAULT_DISTANCE_KM = 10;
+const NEAR_YOU_SECTOR_ID = "near-you";
+type SectorFilter = {
+    id: string;
+    label: string;
+    matches: (business: Business, offer: Offer) => boolean;
+};
+const SUB_SECTORS: Record<string, string[]> = {
+    "food": ["Italian", "Asian", "Mexican", "Burgers", "Pizza", "Desserts", "Bakery"],
+    "drinks": ["Cocktails", "Speakeasy", "Wine Bar", "Pub", "Rooftop", "Craft Beer", "Breweries"],
+    "beauty": ["Nails", "Hair", "Makeup", "Skin Care", "Lashes", "Brows"],
+    "boutiques": ["Clothing", "Vintage", "Accessories", "Home", "Gifts"],
+    "apothecary": ["Skincare", "Vitamins", "Oils", "Supplements"],
+    "health": ["Physio", "Chiro", "Massage", "Acupuncture", "Dental"],
+};
+const SUB_SECTOR_KEYWORDS: Record<string, string[]> = {
+    Desserts: ["dessert", "desserts", "ice cream", "gelato", "sorbet", "donut", "doughnut", "cake", "pastry"],
+};
+const DIETARY_KEYWORDS = {
+    vegan: ["vegan", "plant based", "plant-based", "dairy free", "dairy-free", "egg free", "egg-free"],
+    vegetarian: ["vegetarian", "veggie", "meat free", "meat-free"],
+};
 
-function getDistanceLimitMeters(distance: (typeof DISTANCE_OPTIONS)[number]): number {
-    if (distance === "500m") return 500;
-    if (distance === "1km") return 1000;
-    if (distance === "5km") return 5000;
-    return 10_000;
+const SECTOR_FILTERS: SectorFilter[] = [
+    { id: NEAR_YOU_SECTOR_ID, label: "Near You", matches: () => true },
+    { id: "food", label: "Food", matches: (business) => business.category === "Food" || business.category === "Coffee" },
+    {
+        id: "drinks",
+        label: "Drinks",
+        matches: (business, offer) =>
+            business.category === "Drinks" ||
+            includesKeyword(`${business.name} ${offer.title} ${offer.description}`, ["cocktail", "bar", "martini", "wine", "happy hour", "brewery", "breweries", "brew", "beer", "ale", "tap", "lager", "pint"]),
+    },
+    { id: "beauty", label: "Beauty", matches: (business) => business.category === "Beauty" },
+    { id: "fitness", label: "Fitness", matches: (business) => business.category === "Fitness" },
+    {
+        id: "cinema",
+        label: "Cinema",
+        matches: (business, offer) =>
+            business.category === "Entertainment" &&
+            includesKeyword(`${business.name} ${offer.title} ${offer.description}`, ["cinema", "movie", "film", "screen", "ticket"]),
+    },
+    { id: "boutiques", label: "Boutiques", matches: (business) => business.category === "Retail" },
+    {
+        id: "apothecary",
+        label: "Apothecary",
+        matches: (business, offer) =>
+            (business.category === "Wellness" || business.category === "Beauty") &&
+            includesKeyword(`${business.name} ${offer.title} ${offer.description}`, ["apothecary", "skin", "skincare", "self-care", "spa", "wellness"]),
+    },
+    {
+        id: "health",
+        label: "Health",
+        matches: (business, offer) =>
+            business.category === "Wellness" ||
+            includesKeyword(`${business.name} ${offer.title} ${offer.description}`, ["health", "recovery", "physio", "chiro", "clinic", "massage"]),
+    },
+];
+
+function getDistanceLimitMeters(distanceKm: number): number {
+    return distanceKm * 1000;
 }
 
 function formatKm(km: number): string {
     return km.toFixed(1).replace(/\.0$/, "");
-}
-
-function getHeaderRadius(distance: (typeof DISTANCE_OPTIONS)[number]): string {
-    if (distance === "500m") return "within 0.5 km";
-    if (distance === "1km") return "within 1 km";
-    if (distance === "5km") return "within 5 km";
-    return "within 10 km";
 }
 
 function getOfferPrice(slot: Offer): string {
@@ -59,20 +102,80 @@ function getOriginalOfferPrice(slot: Offer): string {
     return `$${(slot.originalPrice ?? 11.99).toFixed(2)}`;
 }
 
+function getOfferPriceNumber(slot: Offer): number {
+    const base = slot.originalPrice ?? 11.99;
+    if (slot.discountType === "percent") {
+        return base * (1 - slot.value / 100);
+    }
+    if (slot.discountType === "fixed") {
+        return Math.max(base - slot.value, 1);
+    }
+    return base / 2;
+}
+
+function includesKeyword(text: string, keywords: string[]): boolean {
+    const value = text.toLowerCase();
+    return keywords.some((keyword) => value.includes(keyword));
+}
+
+function getSubSectorKeywords(subSector: string): string[] {
+    return SUB_SECTOR_KEYWORDS[subSector] ?? [subSector.toLowerCase()];
+}
+
+function getStableBucketIndex(seed: string, bucketCount: number): number {
+    if (bucketCount <= 0) return 0;
+
+    let hash = 0;
+    for (let i = 0; i < seed.length; i += 1) {
+        hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+    }
+    return hash % bucketCount;
+}
+
+function matchesSelectedSubSector(
+    selectedSectorId: string,
+    selectedSubSectorId: string,
+    business: Business,
+    offer: Offer
+): boolean {
+    const haystack = `${business.name} ${business.category} ${offer.title} ${offer.description}`;
+    if (includesKeyword(haystack, getSubSectorKeywords(selectedSubSectorId))) {
+        return true;
+    }
+
+    // Generated mock businesses use generic copy, so keyword-only matching is too sparse.
+    // Use a stable pseudo-assignment for Food sub-sectors to keep the UI populated.
+    if (
+        selectedSectorId === "food" &&
+        business.id.startsWith("gen_b_") &&
+        (business.category === "Food" || business.category === "Coffee")
+    ) {
+        const foodSubSectors = SUB_SECTORS.food ?? [];
+        const bucket = getStableBucketIndex(business.id, foodSubSectors.length);
+        return (foodSubSectors[bucket] ?? "").toLowerCase() === selectedSubSectorId.toLowerCase();
+    }
+
+    return false;
+}
+
 export default function HomePage() {
     const router = useRouter();
 
     const [search, setSearch] = useState("");
-    const [showFilters, setShowFilters] = useState(false);
     const [liveSlots, setLiveSlots] = useState<Offer[]>([]);
     const [claiming, setClaiming] = useState<string | null>(null);
-    const [selectedDistance, setSelectedDistance] = useState<(typeof DISTANCE_OPTIONS)[number]>(DEFAULT_DISTANCE);
+    const [distanceKm, setDistanceKm] = useState<number>(10);
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
     const [hasLoyalty, setHasLoyalty] = useState(false);
     const [acceptsBookings, setAcceptsBookings] = useState(false);
+    const [showDistanceFilter, setShowDistanceFilter] = useState(false);
+    const [showPriceFilter, setShowPriceFilter] = useState(false);
     const [flyingAnimations, setFlyingAnimations] = useState<Array<{ id: string; startPosition: { x: number; y: number } }>>([]);
     const [locationLabel, setLocationLabel] = useState("Locating...");
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [selectedSectorId, setSelectedSectorId] = useState<string>(NEAR_YOU_SECTOR_ID);
+    const [selectedSubSectorId, setSelectedSubSectorId] = useState<string | null>(null);
+    const [dietaryFilters, setDietaryFilters] = useState({ vegan: false, vegetarian: false });
     const logoInputRef = useRef<HTMLInputElement | null>(null);
 
     const {
@@ -221,7 +324,7 @@ export default function HomePage() {
 
     const filteredSlots = useMemo(() => {
         const searchLower = search.toLowerCase();
-        const maxDistance = getDistanceLimitMeters(selectedDistance);
+        const maxDistance = getDistanceLimitMeters(distanceKm);
 
         return liveSlots.filter((slot) => {
             const business = businessById.get(slot.businessId);
@@ -246,55 +349,110 @@ export default function HomePage() {
 
             return true;
         });
-    }, [liveSlots, search, selectedDistance, selectedPrice, acceptsBookings, preferences.categories, businessById, userLoc.lat, userLoc.lng]);
+    }, [liveSlots, search, distanceKm, selectedPrice, acceptsBookings, preferences.categories, businessById, userLoc.lat, userLoc.lng]);
 
-    const recommended = useMemo(() => {
-        return [...filteredSlots]
-            .sort((a, b) => b.claimedCount - a.claimedCount)
-            .slice(0, 10);
-    }, [filteredSlots]);
+    const sectorById = useMemo(() => new Map(SECTOR_FILTERS.map((sector) => [sector.id, sector])), []);
 
-    const endingSoon = useMemo(() => {
-        return [...filteredSlots]
-            .sort((a, b) => a.endsAt - b.endsAt)
-            .slice(0, 10);
-    }, [filteredSlots]);
+    const businessesByTopOffer = useMemo(() => {
+        const byBusiness = new Map<
+            string,
+            {
+                business: (typeof MOCK_BUSINESSES)[number];
+                topOffer: Offer;
+                offerCount: number;
+                slotsLeft: number;
+                distanceText: string;
+                distanceMeters: number;
+            }
+        >();
 
-    const tomorrow = useMemo(() => {
-        const now = new Date();
-        const tomorrowDate = new Date(now);
-        tomorrowDate.setDate(now.getDate() + 1);
+        filteredSlots.forEach((slot) => {
+            const business = businessById.get(slot.businessId);
+            if (!business) return;
 
-        const tomorrowKey = tomorrowDate.toDateString();
+            const distance = calculateDistanceAndTime(userLoc.lat, userLoc.lng, business.lat, business.lng);
+            const remaining = Math.max((slot.inventory ?? 0) - (slot.claimedCount ?? 0), 0);
+            const current = byBusiness.get(business.id);
 
-        const slots = filteredSlots.filter((slot) => new Date(slot.startsAt).toDateString() === tomorrowKey);
-        if (slots.length > 0) {
-            return slots.sort((a, b) => a.startsAt - b.startsAt).slice(0, 10);
+            if (!current) {
+                byBusiness.set(business.id, {
+                    business,
+                    topOffer: slot,
+                    offerCount: 1,
+                    slotsLeft: remaining,
+                    distanceText: distance.displayText,
+                    distanceMeters: distance.distanceMeters,
+                });
+                return;
+            }
+
+            const currentPrice = getOfferPriceNumber(current.topOffer);
+            const candidatePrice = getOfferPriceNumber(slot);
+            const shouldPromote = candidatePrice < currentPrice || (candidatePrice === currentPrice && slot.value > current.topOffer.value);
+
+            byBusiness.set(business.id, {
+                ...current,
+                topOffer: shouldPromote ? slot : current.topOffer,
+                offerCount: current.offerCount + 1,
+                slotsLeft: current.slotsLeft + remaining,
+            });
+        });
+
+        return Array.from(byBusiness.values()).sort(
+            (left, right) =>
+                left.distanceMeters - right.distanceMeters ||
+                right.topOffer.value - left.topOffer.value ||
+                right.offerCount - left.offerCount
+        );
+    }, [filteredSlots, businessById, userLoc.lat, userLoc.lng]);
+
+    const sectorCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        SECTOR_FILTERS.forEach((sector) => counts.set(sector.id, 0));
+
+        businessesByTopOffer.forEach(({ business, topOffer }) => {
+            SECTOR_FILTERS.forEach((sector) => {
+                if (sector.id === NEAR_YOU_SECTOR_ID) return;
+                if (!sector.matches(business, topOffer)) return;
+                counts.set(sector.id, (counts.get(sector.id) ?? 0) + 1);
+            });
+        });
+
+        counts.set(NEAR_YOU_SECTOR_ID, businessesByTopOffer.length);
+        return counts;
+    }, [businessesByTopOffer]);
+
+    const selectedSector = sectorById.get(selectedSectorId) ?? SECTOR_FILTERS[0];
+
+    const visibleBusinesses = useMemo(() => {
+        let base = businessesByTopOffer;
+
+        if (selectedSector.id !== NEAR_YOU_SECTOR_ID) {
+            base = base.filter(({ business, topOffer }) => selectedSector.matches(business, topOffer));
         }
 
-        return [...filteredSlots].sort((a, b) => a.startsAt - b.startsAt).slice(0, 10);
-    }, [filteredSlots]);
+        if (selectedSubSectorId) {
+            base = base.filter(({ business, topOffer }) =>
+                matchesSelectedSubSector(selectedSector.id, selectedSubSectorId, business, topOffer)
+            );
+        }
 
-    const sections = [
-        { title: "Recommended for you", items: recommended },
-        { title: "Save before it's too late", items: endingSoon },
-        { title: "Pick up tomorrow", items: tomorrow },
-    ];
+        if (selectedSector.id === "food" && (dietaryFilters.vegan || dietaryFilters.vegetarian)) {
+            base = base.filter(({ business, topOffer }) => {
+                const text = `${business.name} ${business.description || ""} ${business.category} ${topOffer.title} ${topOffer.description}`;
+                const veganMatch = includesKeyword(text, DIETARY_KEYWORDS.vegan);
+                const vegetarianMatch = includesKeyword(text, DIETARY_KEYWORDS.vegetarian) || veganMatch;
 
-    const activeFilterCount =
-        preferences.categories.length +
-        (selectedDistance !== DEFAULT_DISTANCE ? 1 : 0) +
-        (selectedPrice !== null ? 1 : 0) +
-        (hasLoyalty ? 1 : 0) +
-        (acceptsBookings ? 1 : 0);
+                if (dietaryFilters.vegan && dietaryFilters.vegetarian) return veganMatch || vegetarianMatch;
+                if (dietaryFilters.vegan) return veganMatch;
+                return vegetarianMatch;
+            });
+        }
 
-    const resetFilters = () => {
-        setPreferences({ categories: [], liveDealsOnly: false });
-        setSelectedDistance(DEFAULT_DISTANCE);
-        setSelectedPrice(null);
-        setHasLoyalty(false);
-        setAcceptsBookings(false);
-    };
+        return base;
+    }, [businessesByTopOffer, selectedSector, selectedSubSectorId, dietaryFilters.vegan, dietaryFilters.vegetarian]);
+
+
 
     const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -311,348 +469,354 @@ export default function HomePage() {
         reader.readAsDataURL(file);
     };
 
+    const handleGoToMap = () => {
+        if (selectedSectorId === NEAR_YOU_SECTOR_ID) {
+            router.push("/consumer/map");
+            return;
+        }
+
+        const categoryMapping: Record<string, string[]> = {
+            food: ["Food", "Coffee"],
+            drinks: ["Drinks"],
+            beauty: ["Beauty"],
+            fitness: ["Fitness"],
+            cinema: ["Entertainment"],
+            boutiques: ["Retail"],
+            apothecary: ["Wellness", "Beauty"],
+            health: ["Wellness"],
+        };
+
+        const cats = categoryMapping[selectedSectorId];
+        if (cats && cats.length > 0) {
+            router.push(`/consumer/map?categories=${cats.join(",")}`);
+        } else {
+            router.push("/consumer/map");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white pb-28 text-[#1f2120]">
-            <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/95 px-5 pb-5 pt-4 backdrop-blur-xl">
-                <div className="mb-7 flex items-center">
-                    <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                    />
-                    <button
-                        onClick={() => logoInputRef.current?.click()}
-                        className="inline-flex items-center gap-2 rounded-xl border border-[#d6dfd8] bg-white px-3 py-2 text-[#1f2a2a] shadow-sm hover:bg-[#f1f5f1] transition-all active:scale-95"
-                        aria-label="Upload logo"
-                    >
-                        {logoPreview ? (
-                            <span
-                                className="h-6 w-6 rounded-md border border-[#3744D2]/40 bg-cover bg-center"
-                                style={{ backgroundImage: `url(${logoPreview})` }}
-                            />
-                        ) : (
-                            <Upload className="h-4 w-4 text-brand" />
-                        )}
-                        <span className="text-sm font-bold tracking-tight">
-                            {logoPreview ? "Sync Brand" : "Setup Brand"}
-                        </span>
-                    </button>
-                </div>
-
-                <div className="flex items-start justify-between gap-3">
+            <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/95 px-5 pb-4 pt-4 backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
                         <button className="flex items-center gap-1 text-[22px] font-black text-[#1f2120]">
                             <MapPin className="h-5 w-5 text-brand" />
                             {locationLabel}
                             <ChevronDown className="h-4 w-4 text-[#8a9791]" />
                         </button>
-                        <p className="text-[14px] font-bold text-[#6f7b76]">{getHeaderRadius(selectedDistance)}</p>
+                        <div className="relative mt-0.5">
+                            <button
+                                onClick={() => {
+                                    setShowDistanceFilter(!showDistanceFilter);
+                                    setShowPriceFilter(false);
+                                }}
+                                className="text-[14px] font-bold text-[#6f7b76] hover:opacity-80 transition-opacity text-left"
+                            >
+                                within <span className="text-brand underline decoration-brand/30 underline-offset-4">{distanceKm} km</span>
+                            </button>
+                            {showDistanceFilter && (
+                                <div className="absolute left-0 top-8 z-50 w-72 rounded-3xl border border-[#e1e8e2] bg-white p-5 shadow-2xl">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-[#8a9791]">Max Distance</h4>
+                                        <span className="text-sm font-bold text-brand">{distanceKm} km</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="50"
+                                        step="1"
+                                        value={distanceKm}
+                                        onChange={(e) => setDistanceKm(Number(e.target.value))}
+                                        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#f1f5f1] accent-brand transition-all [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow-md"
+                                    />
+                                    <div className="mt-3 flex justify-between text-[11px] font-bold text-[#a8b3ac]">
+                                        <span>1km</span>
+                                        <span>50km</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                        />
                         <button
-                            onClick={() => setShowFilters(true)}
-                            className="relative overflow-hidden rounded-xl border border-[#d6dfd8] bg-white px-3 py-2 text-[#1f2a2a] shadow-sm active:scale-95 transition-all"
-                            aria-label="Open filters"
+                            onClick={() => logoInputRef.current?.click()}
+                            className="flex h-10 items-center justify-center gap-2 rounded-full bg-gray-100 px-3 text-sm font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                            aria-label="Upload logo"
                         >
-                            <div className="absolute inset-0 bg-brand/5 opacity-0 hover:opacity-100 transition-opacity" />
-                            <SlidersHorizontal className="h-4 w-4 relative z-10 text-brand" />
-                            {activeFilterCount > 0 && (
-                                <span className="absolute -right-1 -top-1 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
-                                    {activeFilterCount}
-                                </span>
+                            {logoPreview ? (
+                                <span
+                                    className="h-5 w-5 rounded-full border border-gray-300 bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${logoPreview})` }}
+                                />
+                            ) : (
+                                <Upload className="h-4 w-4" />
                             )}
+                            <span className="hidden sm:inline">{logoPreview ? "Brand" : "Setup"}</span>
                         </button>
-
                         <button
                             onClick={() => router.push("/consumer/profile")}
-                            className="relative group rounded-xl border border-[#d6dfd8] bg-white px-3.5 py-2.5 text-[#1f2a2a] shadow-sm active:scale-95 transition-all overflow-hidden"
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-[#1f2a2a] hover:bg-gray-200 transition-all"
                             aria-label="Profile"
                         >
-                            <div className="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <User className="h-5 w-5 text-brand relative z-10" />
+                            <User className="h-5 w-5" />
                         </button>
-
                     </div>
                 </div>
 
-                <div className="relative mt-5">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8a9791]" />
-                    <input
-                        type="text"
-                        placeholder="Search"
-                        value={search}
-                        onChange={(event) => {
-                            setSearch(event.target.value);
-                            if (event.target.value && preferences.categories.length > 0) {
-                                setPreferences({ categories: [] });
-                            }
-                        }}
-                        className="h-14 w-full rounded-2xl border border-gray-200 bg-white pl-12 pr-4 text-[16px] text-[#1f2a2a] outline-none placeholder:text-[#8a9791] focus:ring-2 focus:ring-brand/10 transition-all font-medium"
-                    />
-                </div>
-            </header>
+                <div className="relative mt-4 flex h-14 w-full rounded-2xl bg-gray-100 focus-within:ring-2 focus-within:ring-black/5 transition-all font-medium border border-transparent">
+                    <div className="relative flex-1 flex items-center">
+                        <Search className="pointer-events-none absolute left-4 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search businesses..."
+                            value={search}
+                            onChange={(event) => {
+                                setSearch(event.target.value);
+                                if (event.target.value && preferences.categories.length > 0) {
+                                    setPreferences({ categories: [] });
+                                }
+                            }}
+                            className="h-full w-full bg-transparent pl-12 pr-4 text-[16px] text-gray-900 outline-none placeholder:text-gray-500"
+                        />
+                    </div>
 
-            <main className="space-y-6 px-4 py-5">
-                {sections.map((section) => (
-                    <section key={section.title}>
-                        <div className="mb-3 flex items-center justify-between">
-                            <h2 className="text-[18px] font-black text-[#1f2a2a] tracking-tight">{section.title}</h2>
-                            <button
-                                onClick={() => router.push("/consumer/map")}
-                                className="text-[14px] font-bold text-brand"
-                            >
-                                See all ›
-                            </button>
-                        </div>
+                    <div className="h-8 w-px bg-gray-300 my-auto" />
 
-                        {section.items.length === 0 ? (
-                            <div className="rounded-3xl border border-dashed border-[#d6dfd8] bg-white px-4 py-8 text-center text-sm text-[#6f7b76]">
-                                No offers match your filters.
-                            </div>
-                        ) : (
-                            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                                {section.items.map((slot) => {
-                                    const business = businessById.get(slot.businessId);
-                                    if (!business) return null;
+                    <div className="relative">
+                        <button
+                            onClick={() => {
+                                setShowPriceFilter(!showPriceFilter);
+                                setShowDistanceFilter(false);
+                            }}
+                            className={cn(
+                                "flex h-full items-center justify-center px-5 transition-colors font-bold text-lg",
+                                selectedPrice !== null ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"
+                            )}
+                        >
+                            $
+                        </button>
 
-                                    const slotsLeft = Math.max(slot.inventory - slot.claimedCount, 0);
-                                    const distanceInfo = calculateDistanceAndTime(
-                                        userLoc.lat,
-                                        userLoc.lng,
-                                        business.lat,
-                                        business.lng
-                                    );
-
-                                    return (
-                                        <article
-                                            key={`${section.title}-${slot.id}`}
-                                            className="w-[62vw] max-w-[250px] shrink-0 overflow-hidden rounded-2xl border border-[#dfe6df] bg-white shadow-[0_10px_30px_-18px_rgba(23,31,29,0.25)] transition-all hover:bg-[#f9fbf9] sm:w-[280px] sm:max-w-[280px]"
-                                        >
-                                            <div
-                                                className="relative h-28 cursor-pointer overflow-hidden sm:h-32"
-                                                onClick={() => router.push("/consumer/map")}
-                                            >
-                                                <img src={business.image} alt={business.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                                                <span className="absolute left-2.5 top-2.5 rounded-full bg-[#fdf8e6] px-2.5 py-1 text-[10px] font-black text-[#8c6001] sm:text-xs shadow-sm">
-                                                    {slotsLeft} LEFT
-                                                </span>
-
-                                                <div className="absolute bottom-2.5 left-3 right-3">
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <p className="line-clamp-1 min-w-0 flex-1 text-base font-bold text-white tracking-tight">{business.name}</p>
-                                                        <button
-                                                            onClick={(event) => {
-                                                                event.preventDefault();
-                                                                event.stopPropagation();
-                                                                toggleFavourite(business.id);
-                                                            }}
-                                                            className={cn(
-                                                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
-                                                                isFavourite(business.id)
-                                                                    ? "border-brand bg-brand text-white"
-                                                                    : "border-white/50 bg-black/20 text-white backdrop-blur-md"
-                                                            )}
-                                                            aria-label={`Toggle favourite business ${business.name}`}
-                                                        >
-                                                            <Store className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1.5 px-3.5 pb-3.5 pt-3">
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <h3 className="line-clamp-1 min-w-0 flex-1 text-[15px] font-bold text-[#1f2a2a]">{slot.title || "Surprise Bag"}</h3>
-                                                    <button
-                                                        onClick={(event) => {
-                                                            event.preventDefault();
-                                                            event.stopPropagation();
-                                                            toggleFavourite(slot.id);
-                                                        }}
-                                                        className={cn(
-                                                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-90",
-                                                            isFavourite(slot.id)
-                                                                ? "border-brand/40 bg-brand/10 text-brand"
-                                                                : "border-gray-100 bg-gray-50 text-[#8a9791]"
-                                                        )}
-                                                        aria-label={`Toggle favourite offer ${slot.title || "Surprise Bag"}`}
-                                                    >
-                                                        <Heart className={cn("h-4 w-4", isFavourite(slot.id) && "fill-current")} />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-2 text-[11px] text-[#6f7b76]">
-                                                        <span className="inline-flex items-center gap-1 font-black text-brand">
-                                                            <Star className="h-3 w-3 fill-current" />
-                                                            {business.rating.toFixed(1)}
-                                                        </span>
-                                                        <span className="text-[#d3dbd5]">|</span>
-                                                        <span className="font-medium">{formatKm(distanceInfo.distanceMeters / 1000)} km</span>
-                                                    </div>
-
-                                                    <div className="flex flex-col items-end gap-1.5">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-xs font-bold text-[#8a9791] line-through">{getOriginalOfferPrice(slot)}</span>
-                                                            <span className="text-xl font-black leading-none text-brand tracking-tighter">{getOfferPrice(slot)}</span>
-                                                        </div>
-                                                        <button
-                                                            onClick={(event) => handleClaimSlot(slot.id, event)}
-                                                            disabled={claiming === slot.id || slotsLeft === 0}
-                                                            className="rounded-lg bg-brand px-4 py-1.5 text-[11px] font-black text-white transition-all hover:brightness-95 disabled:opacity-50 active:scale-95 shadow-sm"
-                                                        >
-                                                            {claiming === slot.id ? "..." : "CLAIM"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
-                ))}
-            </main>
-
-            {showFilters && (
-                <>
-                    <div
-                        className="fixed inset-0 z-[10000] bg-black/25"
-                        onClick={() => setShowFilters(false)}
-                    />
-
-                    <div className="fixed inset-x-2 bottom-[72px] z-[10001] flex max-h-[68vh] flex-col overflow-hidden rounded-[2.5rem] border border-[#dfe6df] bg-[#f9fbf9] text-[#1f2a2a] shadow-2xl backdrop-blur-3xl sm:bottom-4 sm:top-20 sm:max-h-[calc(100vh-6rem)]">
-                        <div className="sticky top-0 border-b border-[#e1e8e2] bg-[#f9fbf9]/95 px-4 py-4 backdrop-blur-xl">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-bold tracking-tight text-[#1f2a2a]">Filters</h3>
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={resetFilters}
-                                        className="text-xs font-bold uppercase tracking-widest text-brand hover:opacity-80 transition-opacity"
-                                    >
-                                        Reset
-                                    </button>
-                                    <button
-                                        onClick={() => setShowFilters(false)}
-                                        className="rounded-xl bg-white p-2 text-[#1f2a2a] hover:bg-[#f0f5f1] transition-all border border-[#d6dfd8]"
-                                        aria-label="Close filters"
-                                    >
-                                        <X className="h-5 w-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 space-y-7 overflow-y-auto px-5 py-6 no-scrollbar">
-                            <section>
-                                <h4 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Categories</h4>
-                                <div className="flex flex-wrap gap-2.5">
-                                    {CATEGORIES.map((cat) => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => {
-                                                const current = preferences.categories;
-                                                const updated = current.includes(cat)
-                                                    ? current.filter((item) => item !== cat)
-                                                    : [...current, cat];
-                                                setPreferences({ categories: updated });
-                                            }}
-                                            className={cn(
-                                                "rounded-xl px-4 py-2 text-sm font-bold transition-all border",
-                                                preferences.categories.includes(cat)
-                                                    ? "border-brand bg-brand text-white shadow-lg shadow-brand/20"
-                                                    : "bg-white border-gray-200 text-[#4f5e58] hover:bg-gray-50"
-                                            )}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
-                            </section>
-
-                            <section>
-                                <h4 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Distance</h4>
-                                <div className="grid grid-cols-4 gap-2.5">
-                                    {DISTANCE_OPTIONS.map((dist) => (
-                                        <button
-                                            key={dist}
-                                            onClick={() => setSelectedDistance(dist)}
-                                            className={cn(
-                                                "rounded-xl py-2.5 text-sm font-bold transition-all border",
-                                                selectedDistance === dist
-                                                    ? "border-brand bg-brand text-white shadow-lg shadow-brand/20"
-                                                    : "bg-white border-gray-200 text-[#4f5e58] hover:bg-gray-50"
-                                            )}
-                                        >
-                                            {dist}
-                                        </button>
-                                    ))}
-                                </div>
-                            </section>
-
-                            <section>
+                        {showPriceFilter && (
+                            <div className="absolute right-0 top-16 z-50 w-64 rounded-3xl border border-gray-100 bg-white p-5 shadow-2xl">
                                 <div className="mb-4 flex items-center justify-between">
-                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Max Price</h4>
-                                    <span className="text-sm font-bold text-brand">
+                                    <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-400">Max Price</h4>
+                                    <span className="text-sm font-bold text-indigo-600">
                                         {selectedPrice ? `Under $${selectedPrice}` : "Any"}
                                     </span>
                                 </div>
-                                <div className="relative px-2">
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        step="5"
-                                        value={selectedPrice || 0}
-                                        onChange={(event) => {
-                                            const value = Number.parseInt(event.target.value, 10);
-                                            setSelectedPrice(value === 0 ? null : value);
-                                        }}
-                                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-brand transition-all"
-                                    />
-                                    <div className="mt-3 flex justify-between text-[10px] font-bold text-[#a8b3ac] uppercase tracking-tighter">
-                                        <span>$0</span>
-                                        <span>$25</span>
-                                        <span>$50</span>
-                                        <span>$75</span>
-                                        <span>$100+</span>
-                                    </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    value={selectedPrice || 0}
+                                    onChange={(event) => {
+                                        const value = Number.parseInt(event.target.value, 10);
+                                        setSelectedPrice(value === 0 ? null : value);
+                                    }}
+                                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-100 accent-indigo-600 transition-all [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:shadow-md"
+                                />
+                                <div className="mt-3 flex justify-between text-[11px] font-bold text-gray-400">
+                                    <span>Any</span>
+                                    <span>$100+</span>
                                 </div>
-                            </section>
-
-                            <section className="space-y-4">
-                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a9791]">Preferences</h4>
-
-                                <ToggleRow
-                                    label="Has Loyalty Program"
-                                    enabled={hasLoyalty}
-                                    onClick={() => setHasLoyalty((prev) => !prev)}
-                                />
-                                <ToggleRow
-                                    label="Accepts Bookings"
-                                    enabled={acceptsBookings}
-                                    onClick={() => setAcceptsBookings((prev) => !prev)}
-                                />
-                            </section>
-                        </div>
-
-                        <div className="border-t border-[#e1e8e2] bg-[#f9fbf9]/95 p-5 pb-safe backdrop-blur-xl">
-                            <button
-                                onClick={() => setShowFilters(false)}
-                                className="w-full rounded-2xl bg-brand py-4 text-sm font-black text-white shadow-xl shadow-brand/20 active:scale-[0.98] transition-all hover:brightness-95"
-                            >
-                                UPDATE RESULTS
-                            </button>
-                        </div>
+                            </div>
+                        )}
                     </div>
-                </>
-            )}
+                </div>
+            </header>
+
+            <main className="space-y-5 px-4 py-5">
+                <section>
+                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        {SECTOR_FILTERS.map((sector) => {
+                            const isActive = selectedSectorId === sector.id;
+                            const count = sectorCounts.get(sector.id) ?? 0;
+
+
+                            return (
+                                <button
+                                    key={sector.id}
+                                    onClick={() => {
+                                        setSelectedSectorId(sector.id);
+                                        setSelectedSubSectorId(null);
+                                    }}
+                                    className={cn(
+                                        "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all",
+                                        isActive
+                                            ? "bg-black text-white"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    )}
+                                >
+                                    {sector.label}
+                                    <span className={cn("text-[11px]", isActive ? "text-white/80" : "text-gray-500")}>{count}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                {SUB_SECTORS[selectedSectorId] && (
+                    <section className="-mt-2">
+                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            <button
+                                onClick={() => setSelectedSubSectorId(null)}
+                                className={cn(
+                                    "inline-flex shrink-0 items-center rounded-full px-4 py-1.5 text-xs font-bold transition-all",
+                                    selectedSubSectorId === null
+                                        ? "bg-gray-800 text-white"
+                                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                )}
+                            >
+                                All
+                            </button>
+                            {SUB_SECTORS[selectedSectorId].map((sub) => (
+                                <button
+                                    key={sub}
+                                    onClick={() => setSelectedSubSectorId(sub)}
+                                    className={cn(
+                                        "inline-flex shrink-0 items-center rounded-full px-4 py-1.5 text-xs font-bold transition-all",
+                                        selectedSubSectorId === sub
+                                            ? "bg-gray-800 text-white"
+                                            : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                    )}
+                                >
+                                    {sub}
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                <section>
+                    <div className="mb-3 flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <h2 className="text-[22px] font-black tracking-tight text-[#1f2a2a]">{selectedSector.label}</h2>
+                                {selectedSectorId === "food" && (
+                                    <div className="flex gap-1.5 ml-1">
+                                        <button
+                                            onClick={() => setDietaryFilters((prev) => ({ ...prev, vegetarian: !prev.vegetarian }))}
+                                            className={cn(
+                                                "inline-flex h-7 items-center rounded-full border px-2.5 text-[11px] font-black tracking-wide transition-all",
+                                                dietaryFilters.vegetarian
+                                                    ? "border-[#1f8f4d] bg-[#1f8f4d] text-white"
+                                                    : "border-[#90d4a9] bg-[#e9f9ef] text-[#1f8f4d]"
+                                            )}
+                                            aria-label="Toggle vegetarian filter"
+                                        >
+                                            V
+                                        </button>
+                                        <button
+                                            onClick={() => setDietaryFilters((prev) => ({ ...prev, vegan: !prev.vegan }))}
+                                            className={cn(
+                                                "inline-flex h-7 items-center rounded-full border px-2.5 text-[11px] font-black tracking-wide transition-all",
+                                                dietaryFilters.vegan
+                                                    ? "border-[#1f8f4d] bg-[#1f8f4d] text-white"
+                                                    : "border-[#90d4a9] bg-[#e9f9ef] text-[#1f8f4d]"
+                                            )}
+                                            aria-label="Toggle vegan filter"
+                                        >
+                                            VG
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-sm font-medium text-[#6f7b76]">
+                                {visibleBusinesses.length} {visibleBusinesses.length === 1 ? "business" : "businesses"} in this sector
+                            </p>
+                        </div>
+                        <button onClick={handleGoToMap} className="text-[14px] font-bold text-brand">
+                            See map ›
+                        </button>
+                    </div>
+
+                    {visibleBusinesses.length === 0 ? (
+                        <div className="rounded-3xl border border-dashed border-[#d6dfd8] bg-white px-4 py-8 text-center text-sm text-[#6f7b76]">
+                            No businesses match this sector and filter combo.
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {visibleBusinesses.map((entry) => {
+                                const { business, topOffer, slotsLeft, distanceText, offerCount } = entry;
+                                const canClaim = slotsLeft > 0;
+
+                                return (
+                                    <article key={business.id} className="rounded-[1.6rem] border border-[#dfe6df] bg-white p-3.5 shadow-[0_8px_20px_-18px_rgba(23,31,29,0.55)]">
+                                        <div className="flex items-start gap-3">
+                                            <button onClick={handleGoToMap} className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
+                                                <img src={business.image} alt={business.name} className="h-full w-full object-cover" />
+                                            </button>
+
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-base font-black tracking-tight text-[#1f2a2a]">{business.name}</p>
+                                                        <p className="truncate text-xs font-bold uppercase tracking-[0.12em] text-[#7c8984]">
+                                                            {business.category} · {distanceText}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!isFavourite(topOffer.id)) {
+                                                                toggleFavourite(topOffer.id);
+                                                            }
+                                                            router.push("/consumer/reservations/favourite-offers");
+                                                        }}
+                                                        className={cn(
+                                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-95",
+                                                            isFavourite(topOffer.id)
+                                                                ? "border-indigo-600 bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                                                                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900"
+                                                        )}
+                                                        aria-label={`Save ${topOffer.title} and open saved offers`}
+                                                    >
+                                                        <Bookmark className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+
+                                                <p className="mt-1 line-clamp-1 text-sm font-semibold text-[#4f5e58]">{topOffer.title || "Surprise Bag"}</p>
+
+                                                <div className="mt-2 flex items-end justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-xs font-bold text-[#8a9791] line-through">{getOriginalOfferPrice(topOffer)}</p>
+                                                        <p className="text-xl font-black leading-none tracking-tight text-brand">{getOfferPrice(topOffer)}</p>
+                                                        <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8a9791]">
+                                                            {offerCount} live {offerCount === 1 ? "offer" : "offers"} · {formatKm((entry.distanceMeters || 0) / 1000)} km
+                                                        </p>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={(event) => handleClaimSlot(topOffer.id, event)}
+                                                        disabled={claiming === topOffer.id || !canClaim}
+                                                        className={cn(
+                                                            "rounded-full border px-5 py-2 text-sm font-bold transition-all active:scale-95",
+                                                            canClaim
+                                                                ? "border-[#d5ddd8] bg-white text-[#111c22] hover:bg-[#f7faf8]"
+                                                                : "border-[#e5ebe7] bg-[#f5f7f6] text-[#9ca8a3]",
+                                                            claiming === topOffer.id && "opacity-60"
+                                                        )}
+                                                    >
+                                                        {claiming === topOffer.id ? "..." : "Book"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+            </main>
 
             {flyingAnimations.map((animation) => (
                 <FlyingTicketAnimation
@@ -663,29 +827,6 @@ export default function HomePage() {
                     }}
                 />
             ))}
-        </div>
-    );
-}
-
-function ToggleRow({ label, enabled, onClick }: { label: string; enabled: boolean; onClick: () => void }) {
-    return (
-        <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-[#52615b]">{label}</span>
-            <button
-                onClick={onClick}
-                className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
-                    enabled ? "bg-brand" : "bg-gray-200"
-                )}
-                aria-label={label}
-            >
-                <span
-                    className={cn(
-                        "inline-block h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-300",
-                        enabled ? "translate-x-6" : "translate-x-1"
-                    )}
-                />
-            </button>
         </div>
     );
 }

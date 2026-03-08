@@ -10,7 +10,7 @@ export function BottomNav() {
 
     const tabs = [
         { name: "Home", href: "/consumer/home", icon: Home },
-        { name: "Map", href: "/consumer/map", icon: Map },
+        { name: "Map", href: "/consumer/map?entry=tab", icon: Map },
         { name: "Offers", href: "/consumer/reservations", icon: Ticket },
         { name: "Wallet", href: "/consumer/wallet", icon: Wallet },
     ];
@@ -26,6 +26,8 @@ export function BottomNav() {
                         <Link
                             key={tab.name}
                             href={tab.href}
+                            data-wallet-tab={tab.name === "Wallet" ? "true" : undefined}
+                            data-offers-tab={tab.name === "Offers" ? "true" : undefined}
                             className={cn(
                                 "flex flex-col items-center justify-center w-full h-full space-y-1.5 relative transition-all",
                                 isActive ? "text-brand" : "text-[#8a9791] hover:text-[#1f2a2a]"
